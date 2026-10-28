@@ -450,68 +450,109 @@
   function loader() {
     const el = $('#jl-loader');
     if (!el) return Promise.resolve();
+
     const pctEl = $('.jl-loader-pct', el);
     const mark = $('.jl-loader-logo', el) || $('.jl-loader-mark', el);
-    // الشعار يبان فوراً (mix-blend-mode بيتجاهل opacity:0 في بعض المتصفحات)
-    if (mark) { mark.style.opacity = '1'; mark.style.visibility = 'visible'; }
-    const name = $('.jl-loader-name', el);
-    const sub = $('.jl-loader-sub', el);
     const bar = $('.jl-loader-bar', el);
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let p = 0, done = false;
+    const reduced = window.matchMedia
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : true;
+    const started = Date.now();
+    let p = 0;
+    let done = false;
+    let assetsReady = false;
+    let finishScheduled = false;
+    let resolveLoader;
+    const finished = new Promise(resolve => { resolveLoader = resolve; });
 
+    // The loader must never block the shop, even if an animation or asset fails.
+    const watchdog = setTimeout(() => finish(), 5000);
     const tick = setInterval(() => {
       p = Math.min(92, p + Math.random() * 11);
       if (pctEl) pctEl.textContent = String(Math.round(p)).padStart(2, '0') + '%';
     }, 110);
 
-    if (window.gsap && !reduced) {
-      gsap.timeline({ defaults: { ease: 'power3.out' } })
-        .fromTo(mark, { opacity: 0, scale: .92, y: 8 }, { opacity: 1, scale: 1, y: 0, duration: 1.05, delay: .12 })
-        .from([name, sub, bar, pctEl], { opacity: 0, y: 10, duration: .7, stagger: .08 }, '-=.6');
-    } else {
-      [mark, name, sub, bar, pctEl].forEach(n => n && (n.style.opacity = 1));
+    if (mark) {
+      mark.style.opacity = '1';
+      mark.style.visibility = 'visible';
     }
+
+    const revealPage = () => {
+      if (el.isConnected) el.remove();
+      document.documentElement.classList.add('is-ready');
+      revealInit();
+      resolveLoader();
+    };
 
     const finish = () => {
-      if (done) return; done = true;
+      if (done) return;
+      done = true;
       clearInterval(tick);
+      clearTimeout(watchdog);
       if (pctEl) pctEl.textContent = '100%';
+
       const out = () => {
+        if (!el.isConnected) return revealPage();
         el.classList.add('is-leaving');
-        if (window.gsap && !reduced) {
-          gsap.timeline()
-            .to(el, { opacity: 0, duration: .45, ease: 'power2.in' })
-            .to('#jl-loader-canvas', { opacity: 0, duration: .3 }, 0)
-            .add(() => { el.remove(); document.documentElement.classList.add('is-ready'); revealInit(); }, '-=.1');
-        } else {
-          el.remove(); document.documentElement.classList.add('is-ready'); revealInit();
+        try {
+          if (window.gsap && !reduced) {
+            const timeline = window.gsap.timeline();
+            timeline.to(el, { opacity: 0, duration: .45, ease: 'power2.in' });
+            const canvas = $('#jl-loader-canvas', el);
+            if (canvas) timeline.to(canvas, { opacity: 0, duration: .3 }, 0);
+            timeline.call(revealPage);
+          } else {
+            revealPage();
+          }
+        } catch (error) {
+          console.warn('[CLOTHINA] Loader animation skipped:', error);
+          revealPage();
         }
+        // If GSAP is present but its timeline is interrupted, still release the page.
+        setTimeout(revealPage, 900);
       };
-      setTimeout(out, 260);
+      setTimeout(out, 180);
     };
 
-    // أقل مدة للودر عشان الأنيميشن يبان (زي yarq)
-    const MIN_MS = 1750;
-    const started = Date.now();
-    let assetsReady = false;
     const tryFinish = () => {
-      if (!assetsReady) return;
-      const wait = Math.max(0, MIN_MS - (Date.now() - started));
-      setTimeout(finish, wait);
+      if (!assetsReady || finishScheduled || done) return;
+      finishScheduled = true;
+      const minDuration = 1300;
+      setTimeout(finish, Math.max(0, minDuration - (Date.now() - started)));
     };
-    const markReady = () => { assetsReady = true; tryFinish(); };
-    // نحاول نحمّل صورة الهيرو قبل ما نقفل
+    const markReady = () => {
+      assetsReady = true;
+      tryFinish();
+    };
+
+    try {
+      if (window.gsap && !reduced) {
+        const visibleElements = [bar, pctEl].filter(Boolean);
+        const timeline = window.gsap.timeline({ defaults: { ease: 'power3.out' } });
+        if (mark) timeline.fromTo(mark, { opacity: 0, scale: .92, y: 8 }, { opacity: 1, scale: 1, y: 0, duration: 1.05, delay: .12 });
+        if (visibleElements.length) timeline.from(visibleElements, { opacity: 0, y: 10, duration: .7, stagger: .08 }, mark ? '-=.6' : 0);
+      } else {
+        [bar, pctEl].filter(Boolean).forEach(node => { node.style.opacity = '1'; });
+      }
+    } catch (error) {
+      console.warn('[CLOTHINA] Loader entrance animation skipped:', error);
+      [mark, bar, pctEl].filter(Boolean).forEach(node => { node.style.opacity = '1'; });
+    }
+
     const heroImg = document.querySelector('.hero-media img');
     if (heroImg && !heroImg.complete) {
-      ON(heroImg, 'load', markReady);
-      ON(heroImg, 'error', markReady);
+      ON(heroImg, 'load', markReady, { once: true });
+      ON(heroImg, 'error', markReady, { once: true });
     }
     if (document.readyState === 'complete') markReady();
-    else ON(window, 'load', markReady);
-    // شبكة أمان
-    setTimeout(() => { assetsReady = true; finish(); }, 7000);
-    return new Promise(r => ON(window, 'load', r));
+    else ON(window, 'load', markReady, { once: true });
+
+    // If the page's load event never arrives, stop waiting for assets after 2 seconds.
+    setTimeout(() => {
+      if (!assetsReady) markReady();
+    }, 2000);
+
+    return finished;
   }
 
   /* ---------- Scroll reveal ---------- */
