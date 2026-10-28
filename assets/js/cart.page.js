@@ -1,5 +1,5 @@
 /* ============================================================
-   JORLINA — CART PAGE
+   CLOTHINA — CART PAGE
    ============================================================ */
 const { $, $$, ON, util, cart, toast, icons, coupons } = window.JL;
 

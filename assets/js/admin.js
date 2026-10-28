@@ -1,5 +1,5 @@
 /* ============================================================
-   JORLINA — ADMIN PANEL (مخفي)
+   CLOTHINA — ADMIN PANEL (مخفي)
    • إضافة منتج + تعديل منتج موجود
    • عرض سعر لفترة محدودة (كان بكذا والآن كذا)
    • كوبونات / خصومات (نسبة % + اختيار المنتجات)
@@ -47,15 +47,15 @@
     sheet.id = 'adminSheet';
     sheet.innerHTML = `
       <div class="admin-head">
-        <b>لوحة تحكم جورلينا <span class="tag en">ADMIN</span></b>
+        <b>لوحة تحكم CLOTHINA <span class="tag en">ADMIN</span></b>
         <button class="icon-btn" id="adminClose" aria-label="إغلاق">${icons.close}</button>
       </div>
-      <div class="admin-tabs">
-        <button class="admin-tab is-on" data-tab="new">منتج جديد</button>
-        <button class="admin-tab" data-tab="list">المنتجات</button>
-        <button class="admin-tab" data-tab="coupons">الكوبونات <span class="cnt" id="couponsCnt">0</span></button>
-        <button class="admin-tab" data-tab="orders">الطلبات</button>
-        <button class="admin-tab" data-tab="settings">الإعدادات</button>
+      <div class="admin-tabs" role="tablist" aria-label="خيارات لوحة التحكم">
+        <button class="admin-tab is-on" role="tab" data-tab="new">منتج جديد</button>
+        <button class="admin-tab" role="tab" data-tab="list">المنتجات</button>
+        <button class="admin-tab" role="tab" data-tab="coupons">الكوبونات <span class="cnt" id="couponsCnt">0</span></button>
+        <button class="admin-tab" role="tab" data-tab="orders">الطلبات</button>
+        <button class="admin-tab" role="tab" data-tab="settings">الإعدادات</button>
       </div>
 
       <div class="admin-body" id="adminBody">
@@ -265,6 +265,7 @@
     ON($('#adminFab'), 'click', openSheet);
     ON($('#adminClose'), 'click', closeSheet);
     $$('.admin-tab', sheet).forEach(t => ON(t, 'click', () => switchTab(t.dataset.tab)));
+    switchTab(state.tab);
 
     ON($('#fileProducts'), 'change', e => addFiles(e.target.files));
     ON($('#fileGuide'), 'change', e => addGuide(e.target.files[0]));
@@ -358,8 +359,17 @@
   }
   function switchTab(tab) {
     state.tab = tab;
-    $$('.admin-tab').forEach(t => t.classList.toggle('is-on', t.dataset.tab === tab));
-    $$('#adminBody [data-panel]').forEach(p => p.classList.toggle('hide', p.dataset.panel !== tab));
+    $$('.admin-tab', $('#adminSheet')).forEach(t => {
+      const active = t.dataset.tab === tab;
+      t.classList.toggle('is-on', active);
+      t.setAttribute('aria-selected', String(active));
+    });
+    $$('#adminBody [data-panel]', $('#adminSheet')).forEach(p => {
+      const active = p.dataset.panel === tab;
+      p.classList.toggle('hide', !active);
+      p.setAttribute('aria-hidden', String(!active));
+      p.setAttribute('role', 'tabpanel');
+    });
     if (tab === 'list') loadList();
     if (tab === 'coupons') { loadProductsIntoPicker(); loadCoupons(); }
     if (tab === 'orders') loadOrders();

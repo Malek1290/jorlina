@@ -1,5 +1,5 @@
 /* ============================================================
-   JORLINA — CORE (ES6+)
+   CLOTHINA — CORE (ES6+)
    Supabase · Admin · Cart · Products · UI helpers
    لا حاجة لتعديل أي شيء هنا — كل الإعدادات في config.js
    ============================================================ */
@@ -25,7 +25,7 @@
     /** سعر بأرقام عربية (للعربون الثابت) */
     moneyAr(n) {
       const map = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-      return this.money(n).replace(/[0-9]/g, d => map[+d]).replace('ج.م', CFG.CURRENCY || 'ر.س');
+      return this.money(n).replace(/[0-9]/g, d => map[+d]).replace('ج.م', CFG.CURRENCY || 'ج.م');
     },
     uid() {
       return 'ORD-' + Date.now().toString().slice(-6) + '-' + Math.random().toString(36).slice(2, 5).toUpperCase();
@@ -278,7 +278,7 @@
 
       // وضع العرض التجريبي (بدون قاعدة بيانات)
       if (coupons.demoMode()) {
-        const demo = { JORLINA10: 10, WELCOME15: 15, SALE20: 20 };
+        const demo = { CLOTHINA10: 10, WELCOME15: 15, SALE20: 20 };
         if (!demo[c]) throw new Error('الكود غير صحيح أو منتهي الصلاحية');
         const res = { ok: true, code: c, percent: demo[c], product_ids: [], ends_at: null, demo: true };
         this.save(res);
@@ -293,12 +293,12 @@
         const missing = /schema cache|does not exist|not find the function/i.test(e.message);
         if (missing) {
           // نظام الكوبونات غير مفعّل بعد على القاعدة → أكواد تجريبية للعرض
-          const demo = { JORLINA10: 10, WELCOME15: 15, SALE20: 20 };
-          if (!demo[c]) throw new Error('الكود غير صحيح — (وضع تجريبي: جرّبي JORLINA10)');
+          const demo = { CLOTHINA10: 10, WELCOME15: 15, SALE20: 20 };
+          if (!demo[c]) throw new Error('الكود غير صحيح — (وضع تجريبي: جرّبي CLOTHINA10)');
           const res = { ok: true, code: c, percent: demo[c], product_ids: [], ends_at: null, demo: true };
           this.save(res);
           document.dispatchEvent(new CustomEvent('jl:coupon', { detail: res }));
-          console.warn('[JORLINA] وضع كوبونات تجريبي — شغّل supabase-update-2.sql');
+          console.warn('[CLOTHINA] وضع كوبونات تجريبي — شغّل supabase-update-2.sql');
           return res;
         }
         throw new Error('تعذّر التحقق من الكود — حاولي تاني');
@@ -403,7 +403,7 @@
         rows = await sb.select(CFG.TABLE_ITEMS, 'select=*&order=sort.asc,created_at.desc');
         rows = (rows || []).filter(r => r.is_active !== false);
       } catch (err) {
-        console.warn('[JORLINA] Supabase غير متاح — يتم استخدام منتجات العرض.', err.message);
+        console.warn('[CLOTHINA] Supabase غير متاح — يتم استخدام منتجات العرض.', err.message);
         rows = [];
       }
       window.__JL_DEMO__ = rows.length === 0;
@@ -554,8 +554,8 @@
       <path d="M57 27.5h13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
     </svg>`;
 
-  const LOGO_WORD = 'assets/img/brand/logo-wordmark.png';
-  const LOGO_WORD_LIGHT = 'assets/img/brand/logo-wordmark-light.png';
+  const LOGO_WORD = 'assets/img/brand/clothina-wordmark-white.png';
+  const LOGO_WORD_LIGHT = 'assets/img/brand/clothina-wordmark-white.png';
 
   const icons = {
     cash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.5" width="19" height="11" rx="2.2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 10v4M18 10v4"/></svg>`,
@@ -582,13 +582,13 @@
     const page = document.body.dataset.page || 'home';
     const header = `
       <div class="announce">
-        <span>${util.esc(CFG.FREE_SHIPPING_NOTE)} · تفصيل على مقاسك · استبدال خلال ١٤ يوم</span>
-        <span class="en" style="margin-inline-start:14px">JORLINA ATELIER</span>
+        <span>${util.esc(CFG.FREE_SHIPPING_NOTE)} · تفصيل على مقاسك · توصيل لجميع محافظات مصر</span>
+        <span class="en" style="margin-inline-start:14px">CLOTHINA ATELIER</span>
       </div>
       <header class="site-header" id="siteHeader">
         <div class="container header-inner">
-          <a class="brand" href="index.html" aria-label="JORLINA — جورلينا">
-            <img class="brand-logo" src="${LOGO_WORD}" alt="JORLINA — جورلينا" width="989" height="267">
+          <a class="brand" href="index.html" aria-label="CLOTHINA">
+            <img class="brand-logo" src="${LOGO_WORD}" alt="CLOTHINA" width="590" height="70">
           </a>
           <nav class="nav" aria-label="القائمة الرئيسية">
             <a href="index.html" class="${page === 'home' ? 'is-active' : ''}">الرئيسية</a>
@@ -621,9 +621,9 @@
           <div class="footer-grid">
             <div class="footer-brand">
               <div class="brand">
-                <img class="brand-logo" src="${LOGO_WORD_LIGHT}" alt="JORLINA — جورلينا" width="989" height="267">
+                <img class="brand-logo" src="${LOGO_WORD_LIGHT}" alt="CLOTHINA" width="590" height="70">
               </div>
-              <p>أتيليه فساتين في جدة — نهتم بالتفاصيل الهادية: أقمشة مختارة، قصّات مريحة، وإطلالة تبقى معك سنين.</p>
+              <p>براند أزياء في القاهرة — نهتم بالتفاصيل الهادية: أقمشة مختارة، قصّات مريحة، وإطلالة تبقى معك سنين.</p>
             </div>
             <div>
               <h4>تسوّق</h4>
@@ -645,15 +645,14 @@
             <div>
               <h4>تواصل معنا</h4>
               <ul>
-                <li><a href="https://wa.me/${CFG.WHATSAPP_NUMBER}" target="_blank" rel="noopener">واتساب · ${CFG.WHATSAPP_NUMBER}</a></li>
-                <li><a href="${CFG.INSTAGRAM}" target="_blank" rel="noopener">إنستقرام · ${CFG.INSTAGRAM_HANDLE}</a></li>
+                <li><a href="https://wa.me/${CFG.WHATSAPP_NUMBER}" target="_blank" rel="noopener">واتساب · 01040124131</a></li>
                 <li><a href="${CFG.TIKTOK}" target="_blank" rel="noopener">تيك توك · ${CFG.TIKTOK_HANDLE}</a></li>
                 <li><span>${CFG.CITY}</span></li>
               </ul>
             </div>
           </div>
           <div class="footer-bottom">
-            <span class="en">© ${new Date().getFullYear()} JORLINA ATELIER — QUIET LUXURY</span>
+            <span class="en">© ${new Date().getFullYear()} CLOTHINA ATELIER — QUIET LUXURY</span>
             <span>صُنع بعناية <i class="admin-dot" id="adminDot" title="·"></i></span>
           </div>
         </div>
@@ -684,7 +683,7 @@
       a.id = 'waFab'; a.className = 'wa-fab';
       a.target = '_blank'; a.rel = 'noopener';
       a.setAttribute('aria-label', 'تواصلي معنا على واتساب');
-      a.href = waLink('السلام عليكم JORLINA ✦ عندي استفسار');
+      a.href = waLink('السلام عليكم CLOTHINA ✦ عندي استفسار');
       a.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.7-4.7A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8.6 9.4c.4 2.2 2 3.8 4.2 4.2l1-1.2 1.8.7c-.3 1.2-1.4 1.9-2.6 1.8-2.9-.3-5.2-2.6-5.5-5.5-.1-1.2.6-2.3 1.8-2.6l.7 1.8-1.4.8Z"/></svg>`;
       document.body.appendChild(a);
     }
@@ -695,7 +694,7 @@
      ========================================================== */
   function buildOrderMessage(order) {
     const L = [];
-    L.push('✦ طلب جديد — JORLINA / جورلينا ✦');
+    L.push('✦ طلب جديد — CLOTHINA ✦');
     L.push('رقم الطلب: ' + order.code);
     L.push('');
     L.push('— بيانات العميل —');
@@ -741,16 +740,15 @@
     L.push('');
     L.push('— طريقة الدفع —');
     L.push(order.payment);
-    if (order.paymentId === 'cod' || order.deposit) {
-      L.push(`العربون المقدم (إلزامي): ${util.moneyAr(order.deposit || CFG.COD_DEPOSIT)} — يُخصم من الإجمالي`);
-      L.push('المتبقي عند الاستلام: ' + util.moneyAr(Math.max(0, (order.total || 0) - (order.deposit || CFG.COD_DEPOSIT))));
-    }
-    if (order.paymentId === 'bank') {
-      L.push('العميل يريد الدفع البنكي — يُرسل له بيانات الحساب لتأكيد الطلب.');
+    if (order.paymentId === 'vodafone_cash') {
+      L.push(`دفعة فودافون كاش المقدمة (${Number(CFG.DEPOSIT_PERCENT) || 50}٪): ${util.moneyAr(order.deposit || 0)}`);
+      L.push(`رقم التحويل: ${CFG.VODAFONE_CASH_NUMBER || '01040124131'}`);
+      L.push('المتبقي عند الاستلام: ' + util.moneyAr(Math.max(0, (order.total || 0) - (order.deposit || 0))));
+      L.push('يرجى إرسال صورة التحويل لتأكيد الأوردر.');
     }
     if (order.notes) { L.push(''); L.push('ملاحظات: ' + order.notes); }
     L.push('');
-    L.push('أُرسل من متجر JORLINA');
+    L.push('أُرسل من متجر CLOTHINA');
     return L.join('\n');
   }
 
@@ -826,11 +824,11 @@
           <button class="modal-close" data-close-modal aria-label="إغلاق">${icons.close}</button>
         </div>
         <ul style="display:grid;gap:10px;font-size:14px;color:var(--ink-soft);line-height:1.9">
-          <li>— التوصيل داخل المملكة خلال ٢–٥ أيام عمل.</li>
+          <li>— التوصيل داخل مصر خلال ٢–٥ أيام عمل.</li>
           <li>— ${util.esc(CFG.FREE_SHIPPING_NOTE)}.</li>
           <li>— الاستبدال أو الإرجاع خلال ١٤ يوم بشرط عدم الاستخدام وبقاء البطاقة.</li>
           <li>— المقاسات الخاصة تُفصَّل حسب الطلب ولا تُستبدل إلا في حال وجود عيب.</li>
-          <li>— الدفع عند الاستلام يتطلب عربون مقدم ${util.money(CFG.COD_DEPOSIT)} يُخصم من الإجمالي.</li>
+          <li>— يتم دفع ٥٠٪ من قيمة الطلب مقدماً عبر فودافون كاش والباقي عند الاستلام.</li>
         </ul>
       </div>`;
     document.body.appendChild(ship);
