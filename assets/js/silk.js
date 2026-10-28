@@ -86,9 +86,9 @@
     const uniforms = {
       uTime: { value: 0 },
       uAmp: { value: reduce ? 0.25 : (opts.amp != null ? opts.amp : 1) },
-      uColorA: { value: new THREE.Color(opts.colorA || '#FFFFFF') },
-      uColorB: { value: new THREE.Color(opts.colorB || '#EFECE6') },
-      uColorC: { value: new THREE.Color(opts.colorC || '#D6D7CE') },
+      uColorA: { value: new THREE.Color(opts.colorA || '#7C532B') },
+      uColorB: { value: new THREE.Color(opts.colorB || '#8C5E33') },
+      uColorC: { value: new THREE.Color(opts.colorC || '#F3E9E0') },
       uOpacity: { value: opts.opacity != null ? opts.opacity : 0.95 }
     };
 
