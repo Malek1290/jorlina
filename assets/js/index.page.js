@@ -1,5 +1,5 @@
 /* ============================================================
-   JORLINA — HOME PAGE
+   CLOTHINA — HOME PAGE
    ============================================================ */
 const { $, $$, ON, util, products, cart, toast, cardHTML, offer } = window.JL;
 const initSilk = (window.JLSilk && window.JLSilk.initSilk) || (() => ({ destroy() {} }));

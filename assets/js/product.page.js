@@ -1,5 +1,5 @@
 /* ============================================================
-   JORLINA — PRODUCT PAGE
+   CLOTHINA — PRODUCT PAGE
    جاليري موحّد + ثامبنيل + اختيار مقاس/لون + دليل قياسات + إضافة للسلة
    ============================================================ */
 const { $, $$, ON, util, products, cart, toast, modal, waLink, icons, offer } = window.JL;
@@ -38,9 +38,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   state.size = (p.sizes || [])[0] || '';
   state.color = (p.colors || [])[0]?.name || '';
 
-  document.title = `${p.title} · JORLINA`;
+  document.title = `${p.title} · CLOTHINA`;
   $('#crumbName').textContent = p.title;
-  $('#pdpCat').textContent = [p.title_en || '', p.category || ''].filter(Boolean).join(' · ') || 'JORLINA';
+  $('#pdpCat').textContent = [p.title_en || '', p.category || ''].filter(Boolean).join(' · ') || 'CLOTHINA';
   $('#pdpTitle').textContent = p.title;
 
   /* السعر + العرض المحدود */
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   $('#pdpPrice').after(offerHost);
 
   /* الوصف */
-  $('#pdpDesc').textContent = p.description || 'فستان من أتيليه جورلينا بتفاصيل هادية وقصّة مريحة.';
+  $('#pdpDesc').textContent = p.description || 'فستان من أتيليه CLOTHINA بتفاصيل هادية وقصّة مريحة.';
 
   /* الجاليري */
   const stage = $('#stage');
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       ${p.title_en ? `<li>الاسم: ${util.esc(p.title_en)}</li>` : ''}
       <li>القصّة: مريحة ومبطنة بالكامل.</li>
       <li>التغليف: علبة قماشية + ورق حريري (جاهز كهدية).</li>
-      <li>العربون: ٨٠ ر.س عند الدفع عند الاستلام (يُخصم من الإجمالي).</li>
+      <li>العربون: ٥٠٪ من قيمة الطلب عبر فودافون كاش مقدماً، والباقي عند الاستلام.</li>
     </ul>`;
 
   /* دليل القياسات */
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   /* استفسار على واتساب */
-  const ask = `السلام عليكم JORLINA ✦\nعندي استفسار عن: ${p.title}${p.title_en ? ' / ' + p.title_en : ''}\n${location.href}`;
+  const ask = `السلام عليكم CLOTHINA ✦\nعندي استفسار عن: ${p.title}${p.title_en ? ' / ' + p.title_en : ''}\n${location.href}`;
   $('#waAsk').href = waLink(ask);
 
   /* المشابهة */

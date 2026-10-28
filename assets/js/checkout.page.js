@@ -1,5 +1,5 @@
 /* ============================================================
-   JORLINA — CHECKOUT
+   CLOTHINA — CHECKOUT
    بيانات العميل → مقاسات → طريقة الدفع → BUY
    ثم: رسالة واتساب كاملة + حفظ الطلب في Supabase (اختياري)
    ============================================================ */
@@ -15,6 +15,7 @@ function readMeasureFields() {
   };
 }
 let payMethod = (CFG.PAYMENT_METHODS || [])[0] || null;
+const depositAmount = () => Math.ceil(cart.total() * (Number(CFG.DEPOSIT_PERCENT) || 50) / 100);
 
 /* ---------- رسم ---------- */
 function renderSummary() {
@@ -48,7 +49,7 @@ function renderSummary() {
 }
 
 function renderPay() {
-  const methods = (CFG.PAYMENT_METHODS || []).slice(0, 2);   // طريقتان فقط
+  const methods = (CFG.PAYMENT_METHODS || []).slice(0, 1);   // فودافون كاش فقط
   $('#payGrid').innerHTML = methods.map((m, i) => `
     <label class="pay ${i === 0 ? 'is-on' : ''}" data-pay="${util.esc(m.id)}">
       <input type="radio" name="pay" value="${util.esc(m.id)}" ${i === 0 ? 'checked' : ''}>
@@ -70,31 +71,27 @@ function renderPay() {
 function renderPayNote() {
   const host = $('#payNote');
   if (!host || !payMethod) return;
-  if (payMethod.id === 'cod') {
-    host.innerHTML = `
-      <div class="deposit-box">
-        <div class="deposit-head">
-          <span class="deposit-ico">${icons.cash || ''}</span>
-          <b>العربون المقدم إلزامي: ${util.moneyAr(CFG.COD_DEPOSIT)}</b>
-        </div>
-        <p>${util.esc(payMethod.note || '')}</p>
-        <div class="deposit-split">
-          <span>العربون الآن: <b>${util.moneyAr(CFG.COD_DEPOSIT)}</b></span>
-          <span>المتبقي عند الاستلام: <b>${util.moneyAr(Math.max(0, cart.total() - (CFG.COD_DEPOSIT || 0)))}</b></span>
-        </div>
-      </div>`;
-    const hint = $('#depositHint');
-    if (hint) hint.classList.remove('hide');
-  } else {
-    host.innerHTML = `
-      <div class="deposit-box deposit-box--bank">
-        <div class="deposit-head"><b>الدفع البنكي</b></div>
-        <p>${util.esc(payMethod.note || '')}</p>
-        <div class="deposit-split"><span>المبلغ المطلوب تحويله: <b>${util.money(cart.total())}</b></span></div>
-      </div>`;
-    const hint = $('#depositHint');
-    if (hint) hint.classList.add('hide');
-  }
+  const deposit = depositAmount();
+  const remaining = Math.max(0, cart.total() - deposit);
+  const percent = Number(CFG.DEPOSIT_PERCENT) || 50;
+  host.innerHTML = `
+    <div class="deposit-box">
+      <div class="deposit-head">
+        <span class="deposit-ico">${icons.cash || ''}</span>
+        <b>دفعة مقدمة ${percent}٪ لتأكيد الأوردر</b>
+      </div>
+      <p>${util.esc(payMethod.note || '')}</p>
+      <div class="vodafone-number">
+        <span>رقم فودافون كاش للتحويل</span>
+        <b class="en" dir="ltr">${util.esc(CFG.VODAFONE_CASH_NUMBER || '')}</b>
+      </div>
+      <div class="deposit-split">
+        <span>المبلغ المطلوب تحويله الآن: <b>${util.moneyAr(deposit)}</b></span>
+        <span>المتبقي عند الاستلام: <b>${util.moneyAr(remaining)}</b></span>
+      </div>
+    </div>`;
+  const hint = $('#depositHint');
+  if (hint) hint.classList.remove('hide');
 }
 
 function renderMeasures() {
@@ -128,9 +125,6 @@ async function placeOrder() {
   if (name.length < 2) return (err.textContent = 'اكتبي الاسم بالكامل.');
   if (!/^[0-9+\s-]{8,}$/.test(phone)) return (err.textContent = 'رقم الجوال غير صحيح.');
   if (!payMethod) return (err.textContent = 'اختاري طريقة الدفع.');
-  if (payMethod.id === 'cod' && !confirm) {
-    return (err.textContent = `الدفع عند الاستلام يتطلب عربون مقدم ${util.moneyAr(CFG.COD_DEPOSIT)} — وافق على الشرط للتأكيد.`);
-  }
   if (!confirm) return (err.textContent = 'لازم توافق على تأكيد الطلب.');
 
   const btn = $('#placeOrder');
@@ -166,7 +160,7 @@ async function placeOrder() {
       address: address || null,
       notes: notes || null,
       payment_method: payMethod ? payMethod.title : null,
-      deposit: payMethod && payMethod.id === 'cod' ? (CFG.COD_DEPOSIT || 0) : 0,
+      deposit: depositAmount(),
       items: items.map(i => ({
         id: i.id, title: i.title, size: i.size, color: i.color,
         qty: i.qty, price: i.price, image: i.image
@@ -192,7 +186,7 @@ async function placeOrder() {
     shipping: cart.shipping(),
     payment: payMethod ? payMethod.title : 'غير محدد',
     paymentId: payMethod ? payMethod.id : '',
-    deposit: payMethod && payMethod.id === 'cod' ? (CFG.COD_DEPOSIT || 0) : 0,
+    deposit: depositAmount(),
     measurements: { ...measureData, images: uploaded }
   });
 

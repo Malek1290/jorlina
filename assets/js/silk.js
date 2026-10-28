@@ -1,11 +1,11 @@
 /* ============================================================
-   JORLINA — SILK (Three.js)
+   CLOTHINA — SILK (Three.js)
    قماش حرير متموّج في الخلفية — يُستخدم في التحميل والهيرو
    يعمل حتى لو فتحت الملف مباشرة (file://) بدون سيرفر.
    ============================================================ */
 (() => {
   'use strict';
-  if (!window.THREE) { console.warn('[JORLINA] Three.js غير محمّل'); return; }
+  if (!window.THREE) { console.warn('[CLOTHINA] Three.js غير محمّل'); return; }
 
   const VERT = `
     uniform float uTime;
@@ -69,7 +69,7 @@
     try {
       renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     } catch (e) {
-      console.warn('[JORLINA] WebGL غير متاح', e);
+      console.warn('[CLOTHINA] WebGL غير متاح', e);
       return { destroy() {} };
     }
 
