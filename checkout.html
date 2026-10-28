@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إتمام الطلب · جورلينا JORLINA</title>
+<link rel="icon" href="assets/img/brand/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/img/brand/favicon.png">
+<link rel="preload" as="image" href="assets/img/brand/logo-wordmark.png">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="checkout">
+
+<div id="site-header"></div>
+
+<main>
+  <section class="page-head">
+    <div class="container">
+      <nav class="crumbs"><a href="index.html">الرئيسية</a><span class="sep">/</span><a href="cart.html">السلة</a><span class="sep">/</span><span>إتمام الطلب</span></nav>
+      <div class="section-head" style="margin-bottom:0">
+        <div class="stack">
+          <span class="eyebrow">CHECKOUT</span>
+          <h1 class="title-lg">إتمام الطلب</h1>
+        </div>
+        <p class="muted tiny">خطوتين بس — وبعدها تختار طريقة الدفع</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="checkout-grid" id="checkoutGrid">
+
+        <!-- 1) البيانات -->
+        <div style="display:grid;gap:18px">
+          <div class="panel">
+            <div class="panel-title"><span class="n">1</span> بياناتك</div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="cName">الاسم بالكامل <span class="req">*</span></label>
+                <input class="input" id="cName" autocomplete="name" placeholder="الاسم زي ما تحب ننادي به">
+              </div>
+              <div class="field">
+                <label for="cPhone">رقم الجوال / واتساب <span class="req">*</span></label>
+                <input class="input" id="cPhone" inputmode="tel" autocomplete="tel" placeholder="05xxxxxxxx" dir="ltr">
+              </div>
+              <div class="field">
+                <label for="cCity">المدينة</label>
+                <input class="input" id="cCity" autocomplete="address-level2" placeholder="جدة">
+              </div>
+              <div class="field">
+                <label for="cAddress">العنوان بالتفصيل</label>
+                <input class="input" id="cAddress" autocomplete="street-address" placeholder="الحي / الشارع / رقم المبنى / علامة مميزة">
+              </div>
+            </div>
+            <div class="field">
+              <label for="cNotes">ملاحظات على الطلب</label>
+              <textarea class="textarea" id="cNotes" placeholder="مقاس خاص؟ تعديل في الطول؟ تغليف هدية؟ اكتب هنا"></textarea>
+            </div>
+          </div>
+
+          <!-- مقاساتك (اختياري) -->
+          <div class="panel" id="measurePanel">
+            <div class="panel-title"><span class="n">2</span> مقاساتك (اختياري)</div>
+            <p class="tiny muted">إذا تحتاج تفصيل على مقاسك، عبّي القياسات بالسنتيمتر — كل شي يوصلنا مع الطلب على واتساب.</p>
+
+            <div class="form-grid">
+              <div class="field"><label>الطول (سم)</label><input class="input" id="mHeight" inputmode="numeric" placeholder="165"></div>
+              <div class="field"><label>محيط الصدر (سم)</label><input class="input" id="mBust" inputmode="numeric" placeholder="88"></div>
+              <div class="field"><label>محيط الوسط (سم)</label><input class="input" id="mWaist" inputmode="numeric" placeholder="70"></div>
+              <div class="field"><label>محيط الأرداف (سم)</label><input class="input" id="mHips" inputmode="numeric" placeholder="98"></div>
+              <div class="field"><label>عرض الكتف (سم)</label><input class="input" id="mShoulder" inputmode="numeric" placeholder="38"></div>
+              <div class="field"><label>طول الكم (سم)</label><input class="input" id="mSleeve" inputmode="numeric" placeholder="58"></div>
+            </div>
+
+            <div class="field">
+              <label>ملاحظات المقاس</label>
+              <textarea class="textarea" id="mNotes" style="min-height:70px" placeholder="مثال: الطول المطلوب ١٤٥ سم، مريحة في الصدر، مقاس خاص..."></textarea>
+            </div>
+
+            <p class="tiny muted" style="margin:0">إذا ما تحتاج مقاس خاص، اترك القسم فاضي وكمّل عادي.</p>
+          </div>
+
+          <!-- 3) الدفع -->
+          <div class="panel">
+            <div class="panel-title"><span class="n">3</span> طريقة الدفع</div>
+            <p class="tiny muted" style="margin:0">طريقتان فقط: الدفع عند الاستلام (بعربون مقدم إلزامي) أو الدفع البنكي.</p>
+            <div class="pay-grid" id="payGrid"></div>
+          </div>
+        </div>
+
+        <!-- ملخص -->
+        <aside class="summary">
+          <h3>طلبك</h3>
+          <div class="mini-list" id="miniList"></div>
+          <hr class="rule">
+          <div class="sum-row"><span>المجموع</span><b id="cSub">—</b></div>
+          <div class="sum-row"><span>الشحن</span><b id="cShip">—</b></div>
+
+          <div class="sum-row sum-discount hide" id="cDiscountRow">
+            <span>خصم الكوبون <b class="en" id="cCouponCode"></b></span><b id="cDiscount">—</b>
+          </div>
+
+          <!-- Coupon / Discount -->
+          <div class="coupon-block" id="cCouponBlock"></div>
+
+          <div class="sum-row sum-total"><span>الإجمالي</span><b id="cTotal">—</b></div>
+
+          <div class="field mt-2">
+            <label for="cConfirm" class="tiny">تأكيد أن البيانات صحيحة</label>
+            <label class="pay" style="padding:12px 14px">
+              <input type="checkbox" id="cConfirm">
+              <span class="radio" style="border-radius:6px"></span>
+              <span class="pay-txt"><b style="font-weight:400;font-size:13px">أوافق على تأكيد الطلب ويتم التواصل معي على واتساب</b></span>
+            </label>
+          </div>
+
+          <button class="btn btn--block" id="placeOrder">
+            <span class="en" style="letter-spacing:.18em">BUY</span>
+          </button>
+          <p class="hint"><span class="dot"></span> كل تفاصيل الطلب (المنتجات · المقاس · اللون · المقاسات · طريقة الدفع) تصل على واتساب المتجر مباشرة.</p>
+          <p class="err" id="ckErr"></p>
+        </aside>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="site-footer"></div>
+
+<!-- مودال النجاح -->
+<div class="modal" id="doneModal">
+  <div class="modal-card center" style="justify-items:center;text-align:center">
+    <div style="width:64px;height:64px;border-radius:50%;background:var(--bg-swirl);display:grid;place-items:center;margin-bottom:6px">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>
+    </div>
+    <h3 style="font-size:20px;font-weight:400">تم إرسال طلبك ✦</h3>
+    <p class="tiny muted" style="line-height:2">رقم الطلب: <b class="en" id="orderCodeOut" style="color:var(--text-main)">—</b><br>
+      إذا ما فتحت صفحة واتساب تلقائياً، اضغطي الزر تحت لإرسال تفاصيل الطلب.</p>
+    <a class="btn btn--block" id="waAgain" target="_blank" rel="noopener">فتح واتساب وإرسال الطلب</a>
+    <a class="link-u" href="shop.html" style="justify-self:center">العودة للمتجر</a>
+  </div>
+</div>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/env.js"></script>
+<script src="assets/vendor/three.min.js"></script>
+<script src="assets/vendor/gsap.min.js"></script>
+<script src="assets/vendor/ScrollTrigger.min.js"></script>
+<script src="assets/js/silk.js"></script>
+<script src="assets/js/core.js"></script>
+<script src="assets/js/admin.js"></script>
+<script src="assets/js/checkout.page.js"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5186f3edba591f7',t:'MTc5MzE3NDcxNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

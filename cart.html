@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سلة التسوق · JORLINA</title>
+<link rel="icon" href="assets/img/brand/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/img/brand/favicon.png">
+<link rel="preload" as="image" href="assets/img/brand/logo-wordmark.png">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="cart">
+
+<div id="site-header"></div>
+
+<main>
+  <section class="page-head">
+    <div class="container">
+      <nav class="crumbs"><a href="index.html">الرئيسية</a><span class="sep">/</span><span>السلة</span></nav>
+      <div class="section-head" style="margin-bottom:0">
+        <div class="stack">
+          <span class="eyebrow">YOUR BAG</span>
+          <h1 class="title-lg">سلة التسوّق</h1>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="cart-wrap" id="cartWrap">
+        <!-- القائمة -->
+        <div>
+          <div class="cart-list" id="cartList"></div>
+          <div id="cartEmpty" class="empty hide">
+            <b>سلتك فاضية</b>
+            <span class="tiny">ما فيه فساتين مختارة — نبدأ التسوّق؟</span>
+            <a class="btn btn--ghost btn--sm" href="shop.html">تسوّقي الآن</a>
+          </div>
+          <a class="link-u mt-3" href="shop.html" style="display:inline-flex">متابعة التسوّق <span class="en">→</span></a>
+        </div>
+
+        <!-- الملخص -->
+        <aside class="summary" id="summaryBox">
+          <h3>ملخص الطلب</h3>
+          <div class="sum-row"><span>المجموع</span><b id="sumSub">—</b></div>
+          <div class="sum-row"><span>الشحن</span><b id="sumShip">—</b></div>
+
+          <div class="sum-row sum-discount hide" id="discountRow">
+            <span>خصم الكوبون <b class="en" id="sumCouponCode"></b></span><b id="sumDiscount">—</b>
+          </div>
+
+          <!-- Coupon / Discount -->
+          <div class="coupon-block" id="couponBlock"></div>
+
+          <div class="sum-row sum-total"><span>الإجمالي</span><b id="sumTotal">—</b></div>
+          <button class="btn btn--block" id="goCheckout">إتمام الطلب</button>
+          <p class="hint"><span class="dot"></span> بعد إتمام الطلب تختار طريقة الدفع، ويتم التأكيد على واتساب.</p>
+          <p class="hint"><span class="dot"></span> الدفع عند الاستلام يتطلب عربون مقدم ٨٠ ر.س يُخصم من الإجمالي.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/env.js"></script>
+<script src="assets/vendor/three.min.js"></script>
+<script src="assets/vendor/gsap.min.js"></script>
+<script src="assets/vendor/ScrollTrigger.min.js"></script>
+<script src="assets/js/silk.js"></script>
+<script src="assets/js/core.js"></script>
+<script src="assets/js/admin.js"></script>
+<script src="assets/js/cart.page.js"></script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+/* ============================================================
+   JORLINA — PRODUCT PAGE
+   جاليري موحّد + ثامبنيل + اختيار مقاس/لون + دليل قياسات + إضافة للسلة
+   ============================================================ */
+const { $, $$, ON, util, products, cart, toast, modal, waLink, icons, offer } = window.JL;
+
+const state = { product: null, imgIndex: 0, size: '', color: '', qty: 1 };
+
+/* ---------- كارت مشابه ---------- */
+function miniCard(p) {
+  return `
+    <article class="card reveal">
+      <a href="product.html?id=${encodeURIComponent(p.id)}" class="card-media">
+        <img src="${util.img(p.image_url, true)}" alt="${util.esc(p.title)}" loading="lazy">
+      </a>
+      <div class="card-body">
+        <a class="card-title" href="product.html?id=${encodeURIComponent(p.id)}">${util.esc(p.title)}</a>
+        <div class="card-meta"><span class="card-price">${util.money(p.price)}</span></div>
+      </div>
+    </article>`;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const id = new URLSearchParams(location.search).get('id');
+  const p = await products.one(id);
+
+  if (!p) {
+    $('#pdp').innerHTML = `
+      <div class="empty" style="grid-column:1/-1">
+        <b>المنتج غير موجود</b>
+        <span class="tiny">ممكن الرابط قديم أو المنتج اتشال.</span>
+        <a class="btn btn--ghost btn--sm" href="shop.html">رجوع للمتجر</a>
+      </div>`;
+    return;
+  }
+
+  state.product = p;
+  state.size = (p.sizes || [])[0] || '';
+  state.color = (p.colors || [])[0]?.name || '';
+
+  document.title = `${p.title} · JORLINA`;
+  $('#crumbName').textContent = p.title;
+  $('#pdpCat').textContent = [p.title_en || '', p.category || ''].filter(Boolean).join(' · ') || 'JORLINA';
+  $('#pdpTitle').textContent = p.title;
+
+  /* السعر + العرض المحدود */
+  const st = offer.state(p);
+  const off = offer.pct(p);
+  $('#pdpPrice').innerHTML = `
+    <span>${util.money(p.price)}</span>
+    ${st === 'live' ? `<span class="old">${util.money(p.old_price)}</span><span class="save">خصم ${off}%</span>` : ''}`;
+
+  /* شريط العرض المحدود (كان بكذا والآن كذا — لفترة محدودة) */
+  const offerHost = document.createElement('div');
+  offerHost.style.display = 'grid';
+  offerHost.style.gap = '8px';
+  if (st === 'live' && offer.endsAt(p)) {
+    offerHost.innerHTML = `
+      <div class="offer-strip">
+        <span class="dot-live"></span>
+        <span>عرض محدود — كان بـ <b>${util.money(p.old_price)}</b> والآن <b>${util.money(p.price)}</b></span>
+        <span class="cd" data-offer-end="${offer.endsAt(p).toISOString()}"></span>
+      </div>`;
+    setTimeout(() => window.JL.initCountdowns(), 0);
+  } else if (st === 'live') {
+    offerHost.innerHTML = `
+      <div class="offer-strip"><span class="dot-live"></span>
+      <span>السعر قبل الخصم <b>${util.money(p.old_price)}</b> — والآن <b>${util.money(p.price)}</b></span></div>`;
+  }
+  $('#pdpPrice').after(offerHost);
+
+  /* الوصف */
+  $('#pdpDesc').textContent = p.description || 'فستان من أتيليه جورلينا بتفاصيل هادية وقصّة مريحة.';
+
+  /* الجاليري */
+  const stage = $('#stage');
+  const images = p.images?.length ? p.images : [p.image_url];
+  stage.insertAdjacentHTML('afterbegin', images.map((src, i) =>
+    `<img src="${util.img(src)}" alt="${util.esc(p.title)} — صورة ${i + 1}" class="${i === 0 ? 'is-on' : ''}" data-i="${i}">`).join(''));
+  stage.querySelector('.skeleton')?.remove();
+
+  $('#thumbs').innerHTML = images.map((src, i) =>
+    `<button class="${i === 0 ? 'is-on' : ''}" data-thumb="${i}" aria-label="صورة ${i + 1}">
+       <img src="${util.img(src, true)}" alt="" loading="lazy">
+     </button>`).join('');
+
+  const showImg = (i) => {
+    const n = images.length;
+    state.imgIndex = (i + n) % n;
+    $$('#stage img[data-i]').forEach(im => im.classList.toggle('is-on', +im.dataset.i === state.imgIndex));
+    $$('#thumbs button').forEach(b => b.classList.toggle('is-on', +b.dataset.thumb === state.imgIndex));
+  };
+  ON($('#prevImg'), 'click', () => showImg(state.imgIndex - 1));
+  ON($('#nextImg'), 'click', () => showImg(state.imgIndex + 1));
+  $$('#thumbs button').forEach(b => ON(b, 'click', () => showImg(+b.dataset.thumb)));
+  // سحب بالإصبع
+  let sx = null;
+  ON(stage, 'touchstart', e => sx = e.touches[0].clientX, { passive: true });
+  ON(stage, 'touchend', e => {
+    if (sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    if (Math.abs(dx) > 45) showImg(state.imgIndex + (dx > 0 ? -1 : 1));
+    sx = null;
+  });
+
+  /* المقاسات */
+  const sizes = p.sizes || [];
+  $('#sizeBtns').innerHTML = sizes.map(s =>
+    `<button class="opt-btn ${s === state.size ? 'is-on' : ''}" data-size="${util.esc(s)}">${util.esc(s)}</button>`).join('');
+  $$('#sizeBtns .opt-btn').forEach(b => ON(b, 'click', () => {
+    state.size = b.dataset.size;
+    $$('#sizeBtns .opt-btn').forEach(x => x.classList.toggle('is-on', x === b));
+    $('#sizeHint').textContent = state.size;
+    $('#sizeHint').classList.remove('muted');
+  }));
+  $('#sizeHint').textContent = state.size || 'اختاري مقاس';
+
+  /* الألوان */
+  const colors = p.colors || [];
+  if (colors.length) {
+    $('#colorBtns').innerHTML = colors.map(c =>
+      `<button class="swatch ${c.name === state.color ? 'is-on' : ''}" data-color="${util.esc(c.name)}" title="${util.esc(c.name)}">
+         <i style="background:${util.esc(c.hex || '#EFECE6')}"></i>
+       </button>`).join('');
+    $$('#colorBtns .swatch').forEach(b => ON(b, 'click', () => {
+      state.color = b.dataset.color;
+      $$('#colorBtns .swatch').forEach(x => x.classList.toggle('is-on', x === b));
+      $('#colorHint').textContent = state.color;
+    }));
+    $('#colorHint').textContent = state.color;
+  } else {
+    $('#optColors').remove();
+  }
+
+  /* الكمية */
+  ON($('#qtyMinus'), 'click', () => { state.qty = Math.max(1, state.qty - 1); $('#qtyVal').textContent = state.qty; });
+  ON($('#qtyPlus'), 'click', () => { state.qty = Math.min(99, state.qty + 1); $('#qtyVal').textContent = state.qty; });
+
+  /* تفاصيل */
+  $('#accDetails').innerHTML = `
+    <ul>
+      ${p.fabric ? `<li>الخامة: ${util.esc(p.fabric)}</li>` : ''}
+      ${p.category ? `<li>القسم: ${util.esc(p.category)}</li>` : ''}
+      ${p.title_en ? `<li>الاسم: ${util.esc(p.title_en)}</li>` : ''}
+      <li>القصّة: مريحة ومبطنة بالكامل.</li>
+      <li>التغليف: علبة قماشية + ورق حريري (جاهز كهدية).</li>
+      <li>العربون: ٨٠ ر.س عند الدفع عند الاستلام (يُخصم من الإجمالي).</li>
+    </ul>`;
+
+  /* دليل القياسات */
+  ON($('#openGuide'), 'click', () => {
+    const body = $('#sizeModalBody');
+    if (p.size_guide_url) {
+      body.innerHTML = `<img src="${p.size_guide_url}" alt="دليل قياسات ${util.esc(p.title)}" style="width:100%;border-radius:14px">`;
+    } else {
+      body.innerHTML = document.querySelector('#guideModal').innerHTML;
+      body.querySelector('.modal-head')?.remove();
+    }
+    modal.open('sizeModal');
+  });
+  ON($('[data-close-guide]'), 'click', () => modal.close('sizeModal'));
+  ON($('#sizeModal'), 'click', e => { if (e.target.id === 'sizeModal') modal.close('sizeModal'); });
+
+  /* السلة */
+  const itemToAdd = () => ({
+    id: p.id,
+    title: p.title,
+    title_en: p.title_en,
+    price: p.price,
+    qty: state.qty,
+    size: state.size,
+    color: state.color,
+    image: p.image_url
+  });
+
+  ON($('#addToCart'), 'click', () => {
+    if (!state.size) return toast('اختاري المقاس أولاً', 'warn');
+    cart.add(itemToAdd());
+    toast('تمت الإضافة للسلة', 'ok');
+    bumpCart();
+  });
+
+  ON($('#buyNow'), 'click', () => {
+    if (!state.size) return toast('اختاري المقاس أولاً', 'warn');
+    cart.add(itemToAdd());
+    location.href = 'cart.html';
+  });
+
+  /* استفسار على واتساب */
+  const ask = `السلام عليكم JORLINA ✦\nعندي استفسار عن: ${p.title}${p.title_en ? ' / ' + p.title_en : ''}\n${location.href}`;
+  $('#waAsk').href = waLink(ask);
+
+  /* المشابهة */
+  const all = await products.all();
+  const related = all.filter(x => String(x.id) !== String(p.id))
+    .sort((a, b) => (a.category === p.category ? -1 : 0) - (b.category === p.category ? -1 : 0))
+    .slice(0, 4);
+  $('#relatedGrid').innerHTML = related.map(miniCard).join('');
+  $$('#relatedGrid .card').forEach(c => c.classList.add('is-ready'));
+
+  /* GSAP دخول */
+  if (window.gsap && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    gsap.fromTo('.gallery', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 1, ease: 'power3.out' });
+    gsap.fromTo('#pdp .pdp-info > *', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: .9, ease: 'power3.out', stagger: .06, delay: .08 });
+  }
+});
+
+function bumpCart() {
+  const n = document.querySelector('.cart-count');
+  if (!n || !window.gsap) return;
+  gsap.fromTo(n, { scale: 1 }, { scale: 1.45, duration: .18, yoyo: true, repeat: 1, ease: 'power2.out' });
+}
