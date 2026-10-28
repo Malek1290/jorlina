@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>إتمام الطلب · CLOTHINA</title>
+<title>Checkout · CLOTHINA</title>
 <link rel="icon" href="assets/img/brand/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/img/brand/favicon.png">
 <link rel="preload" as="image" href="assets/img/brand/clothina-wordmark-white.png">
@@ -16,13 +16,13 @@
 <main>
   <section class="page-head">
     <div class="container">
-      <nav class="crumbs"><a href="index.html">الرئيسية</a><span class="sep">/</span><a href="cart.html">السلة</a><span class="sep">/</span><span>إتمام الطلب</span></nav>
+      <nav class="crumbs"><a href="index.html">Home</a><span class="sep">/</span><a href="cart.html">Bag</a><span class="sep">/</span><span>Checkout</span></nav>
       <div class="section-head" style="margin-bottom:0">
         <div class="stack">
           <span class="eyebrow">CHECKOUT</span>
-          <h1 class="title-lg">إتمام الطلب</h1>
+          <h1 class="title-lg">Checkout</h1>
         </div>
-        <p class="muted tiny">خطوتين بس — والدفع بفودافون كاش</p>
+        <p class="muted tiny">Just a few steps — pay with Vodafone Cash</p>
       </div>
     </div>
   </section>
@@ -31,94 +31,94 @@
     <div class="container">
       <div class="checkout-grid" id="checkoutGrid">
 
-        <!-- 1) البيانات -->
+        <!-- 1) Customer details -->
         <div style="display:grid;gap:18px">
           <div class="panel">
-            <div class="panel-title"><span class="n">1</span> بياناتك</div>
+            <div class="panel-title"><span class="n">1</span> Your details</div>
             <div class="form-grid">
               <div class="field">
-                <label for="cName">الاسم بالكامل <span class="req">*</span></label>
-                <input class="input" id="cName" autocomplete="name" placeholder="الاسم زي ما تحب ننادي به">
+                <label for="cName">Full name <span class="req">*</span></label>
+                <input class="input" id="cName" autocomplete="name" placeholder="Your name">
               </div>
               <div class="field">
-                <label for="cPhone">رقم الجوال / واتساب <span class="req">*</span></label>
+                <label for="cPhone">Phone / WhatsApp <span class="req">*</span></label>
                 <input class="input" id="cPhone" inputmode="tel" autocomplete="tel" placeholder="010xxxxxxxx" dir="ltr">
               </div>
               <div class="field">
-                <label for="cCity">المدينة</label>
-                <input class="input" id="cCity" autocomplete="address-level2" placeholder="القاهرة">
+                <label for="cCity">City</label>
+                <input class="input" id="cCity" autocomplete="address-level2" placeholder="Cairo">
               </div>
               <div class="field">
-                <label for="cAddress">العنوان بالتفصيل</label>
-                <input class="input" id="cAddress" autocomplete="street-address" placeholder="الحي / الشارع / رقم المبنى / علامة مميزة">
+                <label for="cAddress">Full address</label>
+                <input class="input" id="cAddress" autocomplete="street-address" placeholder="District / street / building / landmark">
               </div>
             </div>
             <div class="field">
-              <label for="cNotes">ملاحظات على الطلب</label>
-              <textarea class="textarea" id="cNotes" placeholder="مقاس خاص؟ تعديل في الطول؟ تغليف هدية؟ اكتب هنا"></textarea>
+              <label for="cNotes">Order notes</label>
+              <textarea class="textarea" id="cNotes" placeholder="Custom size, length alteration, or gift wrap? Add a note here."></textarea>
             </div>
           </div>
 
-          <!-- مقاساتك (اختياري) -->
+          <!-- Your measurements (optional) -->
           <div class="panel" id="measurePanel">
-            <div class="panel-title"><span class="n">2</span> مقاساتك (اختياري)</div>
-            <p class="tiny muted">إذا تحتاج تفصيل على مقاسك، عبّي القياسات بالسنتيمتر — كل شي يوصلنا مع الطلب على واتساب.</p>
+            <div class="panel-title"><span class="n">2</span> Your measurements (optional)</div>
+            <p class="tiny muted">For a custom fit, enter your measurements in centimetres. They will be sent with your order via WhatsApp.</p>
 
             <div class="form-grid">
-              <div class="field"><label>الطول (سم)</label><input class="input" id="mHeight" inputmode="numeric" placeholder="165"></div>
-              <div class="field"><label>محيط الصدر (سم)</label><input class="input" id="mBust" inputmode="numeric" placeholder="88"></div>
-              <div class="field"><label>محيط الوسط (سم)</label><input class="input" id="mWaist" inputmode="numeric" placeholder="70"></div>
-              <div class="field"><label>محيط الأرداف (سم)</label><input class="input" id="mHips" inputmode="numeric" placeholder="98"></div>
-              <div class="field"><label>عرض الكتف (سم)</label><input class="input" id="mShoulder" inputmode="numeric" placeholder="38"></div>
-              <div class="field"><label>طول الكم (سم)</label><input class="input" id="mSleeve" inputmode="numeric" placeholder="58"></div>
+              <div class="field"><label>Height (cm)</label><input class="input" id="mHeight" inputmode="numeric" placeholder="165"></div>
+              <div class="field"><label>Bust (cm)</label><input class="input" id="mBust" inputmode="numeric" placeholder="88"></div>
+              <div class="field"><label>Waist (cm)</label><input class="input" id="mWaist" inputmode="numeric" placeholder="70"></div>
+              <div class="field"><label>Hips (cm)</label><input class="input" id="mHips" inputmode="numeric" placeholder="98"></div>
+              <div class="field"><label>Shoulder width (cm)</label><input class="input" id="mShoulder" inputmode="numeric" placeholder="38"></div>
+              <div class="field"><label>Sleeve length (cm)</label><input class="input" id="mSleeve" inputmode="numeric" placeholder="58"></div>
             </div>
 
             <div class="field">
-              <label>ملاحظات المقاس</label>
-              <textarea class="textarea" id="mNotes" style="min-height:70px" placeholder="مثال: الطول المطلوب ١٤٥ سم، مريحة في الصدر، مقاس خاص..."></textarea>
+              <label>Fit notes</label>
+              <textarea class="textarea" id="mNotes" style="min-height:70px" placeholder="For example: desired length 145 cm, relaxed at the bust, custom fit…"></textarea>
             </div>
 
-            <p class="tiny muted" style="margin:0">إذا ما تحتاج مقاس خاص، اترك القسم فاضي وكمّل عادي.</p>
+            <p class="tiny muted" style="margin:0">If you do not need a custom fit, leave this section blank.</p>
           </div>
 
-          <!-- 3) الدفع -->
+          <!-- 3) Payment -->
           <div class="panel">
-            <div class="panel-title"><span class="n">3</span> طريقة الدفع</div>
-            <p class="tiny muted" style="margin:0">الدفع بفودافون كاش فقط. يتم تحويل ٥٠٪ من إجمالي الطلب مقدماً والباقي عند الاستلام.</p>
+            <div class="panel-title"><span class="n">3</span> Payment method</div>
+            <p class="tiny muted" style="margin:0">Vodafone Cash only. A 50% deposit is due in advance; the balance is paid on delivery.</p>
             <div class="pay-grid" id="payGrid"></div>
           </div>
         </div>
 
-        <!-- ملخص -->
+        <!-- Order summary -->
         <aside class="summary">
-          <h3>طلبك</h3>
+          <h3>Your order</h3>
           <div class="mini-list" id="miniList"></div>
           <hr class="rule">
-          <div class="sum-row"><span>المجموع</span><b id="cSub">—</b></div>
-          <div class="sum-row"><span>الشحن</span><b id="cShip">—</b></div>
+          <div class="sum-row"><span>Subtotal</span><b id="cSub">—</b></div>
+          <div class="sum-row"><span>Delivery</span><b id="cShip">—</b></div>
 
           <div class="sum-row sum-discount hide" id="cDiscountRow">
-            <span>خصم الكوبون <b class="en" id="cCouponCode"></b></span><b id="cDiscount">—</b>
+            <span>Coupon discount <b class="en" id="cCouponCode"></b></span><b id="cDiscount">—</b>
           </div>
 
           <!-- Coupon / Discount -->
           <div class="coupon-block" id="cCouponBlock"></div>
 
-          <div class="sum-row sum-total"><span>الإجمالي</span><b id="cTotal">—</b></div>
+          <div class="sum-row sum-total"><span>Total</span><b id="cTotal">—</b></div>
 
           <div class="field mt-2">
-            <label for="cConfirm" class="tiny">تأكيد أن البيانات صحيحة</label>
+            <label for="cConfirm" class="tiny">I confirm my details are correct</label>
             <label class="pay" style="padding:12px 14px">
               <input type="checkbox" id="cConfirm">
               <span class="radio" style="border-radius:6px"></span>
-              <span class="pay-txt"><b style="font-weight:400;font-size:13px">أوافق على تأكيد الطلب ويتم التواصل معي على واتساب</b></span>
+              <span class="pay-txt"><b style="font-weight:400;font-size:13px">I agree to place this order and be contacted on WhatsApp</b></span>
             </label>
           </div>
 
           <button class="btn btn--block" id="placeOrder">
-            <span class="en" style="letter-spacing:.18em">BUY</span>
+            <span class="en" style="letter-spacing:.18em">PLACE ORDER</span>
           </button>
-          <p class="hint"><span class="dot"></span> كل تفاصيل الطلب (المنتجات · المقاس · اللون · المقاسات · طريقة الدفع) تصل على واتساب المتجر مباشرة.</p>
+          <p class="hint"><span class="dot"></span> Your order details (items, size, color, measurements, and payment) will be sent to our WhatsApp.</p>
           <p class="err" id="ckErr"></p>
         </aside>
       </div>
@@ -128,17 +128,17 @@
 
 <div id="site-footer"></div>
 
-<!-- مودال النجاح -->
+<!-- Order success modal -->
 <div class="modal" id="doneModal">
   <div class="modal-card center" style="justify-items:center;text-align:center">
     <div style="width:64px;height:64px;border-radius:50%;background:var(--bg-swirl);display:grid;place-items:center;margin-bottom:6px">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7C532B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>
     </div>
-    <h3 style="font-size:20px;font-weight:400">تم إرسال طلبك ✦</h3>
-    <p class="tiny muted" style="line-height:2">رقم الطلب: <b class="en" id="orderCodeOut" style="color:var(--text-main)">—</b><br>
-      إذا ما فتحت صفحة واتساب تلقائياً، اضغطي الزر تحت لإرسال تفاصيل الطلب.</p>
-    <a class="btn btn--block" id="waAgain" target="_blank" rel="noopener">فتح واتساب وإرسال الطلب</a>
-    <a class="link-u" href="shop.html" style="justify-self:center">العودة للمتجر</a>
+    <h3 style="font-size:20px;font-weight:400">Your order has been placed ✦</h3>
+    <p class="tiny muted" style="line-height:2">Order number: <b class="en" id="orderCodeOut" style="color:var(--text-main)">—</b><br>
+      If WhatsApp does not open automatically, use the button below to send your order details.</p>
+    <a class="btn btn--block" id="waAgain" target="_blank" rel="noopener">Open WhatsApp and send order</a>
+    <a class="link-u" href="shop.html" style="justify-self:center">Return to shop</a>
   </div>
 </div>
 

@@ -20,13 +20,10 @@
     },
     money(n) {
       const v = Number(n) || 0;
-      return v.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ' + (CFG.CURRENCY || 'ج.م');
+      return v.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' ' + (CFG.CURRENCY || 'EGP');
     },
-    /** سعر بأرقام عربية (للعربون الثابت) */
-    moneyAr(n) {
-      const map = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-      return this.money(n).replace(/[0-9]/g, d => map[+d]).replace('ج.م', CFG.CURRENCY || 'ج.م');
-    },
+    /** Format deposit amount */
+    moneyAr(n) { return this.money(n); },
     uid() {
       return 'ORD-' + Date.now().toString().slice(-6) + '-' + Math.random().toString(36).slice(2, 5).toUpperCase();
     },
@@ -66,7 +63,7 @@
     },
 
     async req(path, { method = 'GET', body, headers, raw = false } = {}) {
-      if (!this.url || !this.key) throw new Error('Supabase config مفقود');
+      if (!this.url || !this.key) throw new Error('Supabase configuration is missing');
       const res = await fetch(`${this.url}${path}`, {
         method,
         headers: this.headers(headers),
@@ -75,7 +72,7 @@
       if (!res.ok) {
         let msg = res.status + ' ' + res.statusText;
         try { const j = await res.json(); msg = j.message || j.error || msg; } catch (_) {}
-        throw new Error(msg);
+        throw new Error(englishField(msg, `${res.status} ${res.statusText}`));
       }
       if (raw) return res;
       const txt = await res.text();
@@ -112,9 +109,9 @@
         body: file
       });
       if (!res.ok) {
-        let msg = 'فشل رفع الصورة';
+        let msg = 'Image upload failed';
         try { const j = await res.json(); msg = j.message || msg; } catch (_) {}
-        throw new Error(msg);
+        throw new Error(englishField(msg, 'Image upload failed'));
       }
       if (onProgress) onProgress(100);
       return this.publicUrl(bucket, path);
@@ -150,7 +147,7 @@
       if (tok === 'off' || tok === 'logout') {
         this.disable();
       } else if (this.enable(tok)) {
-        util.toast('تم تفعيل وضع الآدمن على هذا المتصفح', 'ok');
+        util.toast('Admin mode enabled in this browser.', 'ok');
       }
       p.delete('admin');
       const q = p.toString();
@@ -164,7 +161,12 @@
   const cart = {
     key: 'jl_cart_v1',
     get() {
-      try { return JSON.parse(localStorage.getItem(this.key)) || []; }
+      try { return (JSON.parse(localStorage.getItem(this.key)) || []).map(i => ({
+        ...i,
+        title: englishField(i.title_en || i.title, 'CLOTHINA piece'),
+        size: englishField(i.size, 'Custom'),
+        color: englishField(i.color, 'Color')
+      })); }
       catch (_) { return []; }
     },
     save(items) {
@@ -244,8 +246,8 @@
       const h = Math.floor((diff % 86400000) / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
-      if (d > 1) return `${d} أيام و${h} ساعة`;
-      if (d === 1) return `${h} ساعة و${m} دقيقة`;
+      if (d > 1) return `${d} days ${h} hours`;
+      if (d === 1) return `${h} hours ${m} minutes`;
       return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
   };
@@ -274,12 +276,12 @@
     /** التحقق من الكود عبر Supabase (dالة validate_coupon) */
     async validate(code) {
       const c = String(code || '').trim().toUpperCase();
-      if (!c) throw new Error('اكتبي كود الخصم');
+      if (!c) throw new Error('Enter a discount code.');
 
       // وضع العرض التجريبي (بدون قاعدة بيانات)
       if (coupons.demoMode()) {
         const demo = { CLOTHINA10: 10, WELCOME15: 15, SALE20: 20 };
-        if (!demo[c]) throw new Error('الكود غير صحيح أو منتهي الصلاحية');
+        if (!demo[c]) throw new Error('Invalid or expired code.');
         const res = { ok: true, code: c, percent: demo[c], product_ids: [], ends_at: null, demo: true };
         this.save(res);
         document.dispatchEvent(new CustomEvent('jl:coupon', { detail: res }));
@@ -294,16 +296,16 @@
         if (missing) {
           // نظام الكوبونات غير مفعّل بعد على القاعدة → أكواد تجريبية للعرض
           const demo = { CLOTHINA10: 10, WELCOME15: 15, SALE20: 20 };
-          if (!demo[c]) throw new Error('الكود غير صحيح — (وضع تجريبي: جرّبي CLOTHINA10)');
+          if (!demo[c]) throw new Error('Invalid code. Demo code: CLOTHINA10');
           const res = { ok: true, code: c, percent: demo[c], product_ids: [], ends_at: null, demo: true };
           this.save(res);
           document.dispatchEvent(new CustomEvent('jl:coupon', { detail: res }));
           console.warn('[CLOTHINA] وضع كوبونات تجريبي — شغّل supabase-update-2.sql');
           return res;
         }
-        throw new Error('تعذّر التحقق من الكود — حاولي تاني');
+        throw new Error('Could not verify the code. Please try again.');
       }
-      if (!data || !data.ok) throw new Error(data?.message || 'الكود غير صحيح أو منتهي الصلاحية');
+      if (!data || !data.ok) throw new Error(englishField(data?.message, 'Invalid or expired code.'));
 
       const res = { ...data, product_ids: data.product_ids || [] };
       this.save(res);
@@ -320,7 +322,7 @@
       return c.product_ids.includes(String(item.id));
     },
 
-    /** تفصيل الخصم على السلة: { eligible, discount, percent } */
+    /** تفصيل الSave على السلة: { eligible, discount, percent } */
     breakdown(items = cart.get()) {
       const c = this.get();
       if (!c) return { coupon: null, eligible: 0, discount: 0, percent: 0 };
@@ -339,57 +341,74 @@
      ========================================================== */
   const DEMO = [
     {
-      id: 'demo-1', title: 'سيلين', title_en: 'CELINE', price: 4200, old_price: 4800,
-      description: 'فستان ساتان بقصّة انسيابية ورقبة كاول ناعمة، مبطّن بالكامل ويناسب السهرات والمناسبات الخاصة.',
-      image_url: 'assets/img/p1.jpg', images: ['assets/img/p1.jpg', 'assets/img/hero.jpg'],
-      category: 'فساتين سهرة', fabric: 'ساتان حريري', badge: 'الأكثر طلباً',
-      sizes: ['S', 'M', 'L', 'XL'], colors: [{ name: 'أوف وايت', hex: '#EFECE6' }]
+      id: 'demo-1', title: 'Celine', title_en: 'CELINE', price: 4200, old_price: 4800,
+      description: 'A polished everyday look in a soft oversized hoodie and easy, well-cut trousers.',
+      image_url: 'assets/img/p1.jpg', images: ['assets/img/p1.jpg'],
+      category: 'Hoodies', fabric: 'Soft knit', badge: 'Bestseller',
+      sizes: ['S', 'M', 'L', 'XL'], colors: [{ name: 'Ivory', hex: '#EFECE6' }]
     },
     {
-      id: 'demo-2', title: 'ليا', title_en: 'LEA', price: 3600, old_price: null,
-      description: 'فستان طويل من الكريب المطفي بلون زيتوني هادي، بأكمام طويلة وتفاصيل كسرة دقيقة.',
+      id: 'demo-2', title: 'Lea', title_en: 'LEA', price: 3600, old_price: null,
+      description: 'A relaxed oversized hoodie paired with comfortable, neatly tailored trousers.',
       image_url: 'assets/img/p2.jpg', images: ['assets/img/p2.jpg'],
-      category: 'فساتين سهرة', fabric: 'كريب مطفي', badge: 'جديد',
-      sizes: ['XS', 'S', 'M', 'L', 'XL'], colors: [{ name: 'زيتوني', hex: '#8A8C7F' }]
+      category: 'Trousers', fabric: 'Soft knit', badge: 'New',
+      sizes: ['XS', 'S', 'M', 'L', 'XL'], colors: [{ name: 'Cocoa', hex: '#8A8C7F' }]
     },
     {
-      id: 'demo-3', title: 'نور', title_en: 'NOOR', price: 2850, old_price: null,
-      description: 'فستان شيفون بلون البيج الرملي مع حزام ناعم يبرز الوسط. خفيف ومريح للمناسبات النهارية.',
+      id: 'demo-3', title: 'Noor', title_en: 'NOOR', price: 2850, old_price: null,
+      description: 'An easy casual outfit in warm neutral tones, designed for comfort throughout the day.',
       image_url: 'assets/img/p3.jpg', images: ['assets/img/p3.jpg'],
-      category: 'فساتين كاجوال', fabric: 'شيفون', badge: '',
-      sizes: ['S', 'M', 'L'], colors: [{ name: 'بيج رملي', hex: '#D9CDBB' }]
+      category: 'Casualwear', fabric: 'Cotton blend', badge: '',
+      sizes: ['S', 'M', 'L'], colors: [{ name: 'Sand', hex: '#D9CDBB' }]
     },
     {
-      id: 'demo-4', title: 'فيرونيك', title_en: 'VERONIQUE', price: 3900, old_price: 4400,
-      description: 'فستان مخمل أسود بقصّة كلاسيكية ولمعة راقية، تصميم هادي وواثق.',
+      id: 'demo-4', title: 'Veronique', title_en: 'VERONIQUE', price: 3900, old_price: 4400,
+      description: 'A timeless dark-toned casual set with a roomy top and a clean, flattering silhouette.',
       image_url: 'assets/img/p4.jpg', images: ['assets/img/p4.jpg'],
-      category: 'فساتين سهرة', fabric: 'مخمل', badge: 'آخر قطعتين',
-      sizes: ['S', 'M', 'L', 'XL'], colors: [{ name: 'أسود', hex: '#1A1A1A' }]
+      category: 'Casualwear', fabric: 'Cotton blend', badge: 'Limited pieces',
+      sizes: ['S', 'M', 'L', 'XL'], colors: [{ name: 'Espresso', hex: '#1A1A1A' }]
     },
     {
-      id: 'demo-5', title: 'أريا', title_en: 'ARIA', price: 8600, old_price: null,
-      description: 'فستان زفاف بلون الأوف وايت بأسدال طويلة وأكمام بتفاصيل ناعمة، خفيف على الجسم ويضيف إشراقة لليوم.',
+      id: 'demo-5', title: 'Aria', title_en: 'ARIA', price: 8600, old_price: null,
+      description: 'A soft ivory hoodie and well-fitting trousers create an effortless, polished everyday look.',
       image_url: 'assets/img/p5.jpg', images: ['assets/img/p5.jpg'],
-      category: 'فساتين زفاف', fabric: 'ساتان لؤلؤي', badge: 'أتيليه',
-      sizes: ['XS', 'S', 'M', 'L', 'مقاس خاص'], colors: [{ name: 'أوف وايت', hex: '#F4F1EA' }]
+      category: 'Trousers', fabric: 'Cotton blend', badge: 'Atelier pick',
+      sizes: ['XS', 'S', 'M', 'L', 'Custom'], colors: [{ name: 'Ivory', hex: '#F4F1EA' }]
     }
   ];
+
+  const FIELD_TRANSLATIONS = {
+    'فساتين سهرة': 'Eveningwear', 'فساتين زفاف': 'Bridal', 'فساتين كاجوال': 'Casualwear',
+    'عبايات': 'Abayas', 'إطلالات': 'Looks', 'ساتان حريري': 'Silk satin', 'كريب مطفي': 'Matte crepe',
+    'شيفون': 'Chiffon', 'مخمل': 'Velvet', 'ساتان لؤلؤي': 'Pearl satin',
+    'الكود غير صحيح أو منتهي الصلاحية': 'Invalid or expired code.',
+    'الأكثر طلباً': 'Bestseller', 'جديد': 'New', 'آخر قطعتين': 'Last two', 'أتيليه': 'Atelier pick',
+    'أوف وايت': 'Ivory', 'بيج رملي': 'Sand', 'زيتوني': 'Olive', 'أسود': 'Black', 'مقاس خاص': 'Custom'
+  };
+  const englishField = (value, fallback = '') => {
+    if (!value) return fallback;
+    const text = String(value);
+    if (FIELD_TRANSLATIONS[text]) return FIELD_TRANSLATIONS[text];
+    return /[\u0600-\u06ff]/.test(text) ? fallback : text;
+  };
 
   function normalize(row) {
     const images = (row.images && row.images.length ? row.images : [row.image_url]).filter(Boolean);
     return {
       ...row,
       id: row.id,
-      title: row.title || 'بدون اسم',
+      title: englishField(row.title, '') || englishField(row.title_en, 'CLOTHINA piece'),
       title_en: row.title_en || '',
       price: Number(row.price) || 0,
       old_price: row.old_price ? Number(row.old_price) : null,
       image_url: row.image_url || images[0],
       images,
-      sizes: (row.sizes && row.sizes.length ? row.sizes : CFG.DEFAULT_SIZES),
-      colors: (row.colors && row.colors.length ? row.colors : []),
-      category: row.category || '',
-      fabric: row.fabric || '',
+      sizes: (row.sizes && row.sizes.length ? row.sizes : CFG.DEFAULT_SIZES).map(s => englishField(s, 'Custom')),
+      colors: (row.colors && row.colors.length ? row.colors.map(c => ({ ...c, name: englishField(c.name, 'Color') })) : []),
+      category: englishField(row.category, 'Clothing'),
+      fabric: englishField(row.fabric, 'Selected fabric'),
+      description: englishField(row.description, 'A thoughtfully designed CLOTHINA piece with a comfortable fit and considered details.'),
+      badge: englishField(row.badge, ''),
       size_guide_url: row.size_guide_url || ''
     };
   }
@@ -403,7 +422,7 @@
         rows = await sb.select(CFG.TABLE_ITEMS, 'select=*&order=sort.asc,created_at.desc');
         rows = (rows || []).filter(r => r.is_active !== false);
       } catch (err) {
-        console.warn('[CLOTHINA] Supabase غير متاح — يتم استخدام منتجات العرض.', err.message);
+        console.warn('[CLOTHINA] Supabase unavailable — using demo products.', err.message);
         rows = [];
       }
       window.__JL_DEMO__ = rows.length === 0;
@@ -598,7 +617,7 @@
     const page = document.body.dataset.page || 'home';
     const header = `
       <div class="announce">
-        <span>${util.esc(CFG.FREE_SHIPPING_NOTE)} · تفصيل على مقاسك · توصيل لجميع محافظات مصر</span>
+        <span>${util.esc(CFG.FREE_SHIPPING_NOTE)} · Made to measure · Delivery across Egypt</span>
         <span class="en" style="margin-inline-start:14px">CLOTHINA ATELIER</span>
       </div>
       <header class="site-header" id="siteHeader">
@@ -606,29 +625,29 @@
           <a class="brand" href="index.html" aria-label="CLOTHINA">
             <img class="brand-logo" src="${LOGO_WORD}" alt="CLOTHINA" width="590" height="70">
           </a>
-          <nav class="nav" aria-label="القائمة الرئيسية">
-            <a href="index.html" class="${page === 'home' ? 'is-active' : ''}">الرئيسية</a>
-            <a href="shop.html" class="${page === 'shop' ? 'is-active' : ''}">المتجر</a>
-            <a href="index.html#collections">الأقسام</a>
-            <a href="index.html#story">عن الأتيليه</a>
-            <a href="index.html#contact">تواصل معنا</a>
+          <nav class="nav" aria-label="Main menu">
+            <a href="index.html" class="${page === 'home' ? 'is-active' : ''}">Home</a>
+            <a href="shop.html" class="${page === 'shop' ? 'is-active' : ''}">Shop</a>
+            <a href="index.html#collections">Collections</a>
+            <a href="index.html#story">Our atelier</a>
+            <a href="index.html#contact">Contact</a>
           </nav>
           <div class="header-actions">
-            <button class="icon-btn burger" id="burgerBtn" aria-label="القائمة">${icons.menu}</button>
-                     <a class="icon-btn" href="cart.html" aria-label="سلة التسوق">
+            <button class="icon-btn burger" id="burgerBtn" aria-label="Menu">${icons.menu}</button>
+                     <a class="icon-btn" href="cart.html" aria-label="Shopping bag">
               ${icons.cart}<span class="cart-count">0</span>
             </a>
           </div>
         </div>
       </header>
       <div class="mobile-nav" id="mobileNav">
-        <button class="icon-btn close-m" id="closeMobile" aria-label="إغلاق">${icons.close}</button>
-        <a href="index.html">الرئيسية</a>
-        <a href="shop.html">المتجر</a>
-        <a href="index.html#collections">الأقسام</a>
-        <a href="index.html#story">عن الأتيليه</a>
-        <a href="cart.html">سلة التسوق</a>
-        <a href="index.html#contact">تواصل معنا</a>
+        <button class="icon-btn close-m" id="closeMobile" aria-label="Close">${icons.close}</button>
+        <a href="index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="index.html#collections">Collections</a>
+        <a href="index.html#story">Our atelier</a>
+        <a href="cart.html">Shopping bag</a>
+        <a href="index.html#contact">Contact</a>
       </div>`;
 
     const footer = `
@@ -639,37 +658,37 @@
               <div class="brand">
                 <img class="brand-logo" src="${LOGO_WORD_LIGHT}" alt="CLOTHINA" width="590" height="70">
               </div>
-              <p>براند أزياء في القاهرة — نهتم بالتفاصيل الهادية: أقمشة مختارة، قصّات مريحة، وإطلالة تبقى معك سنين.</p>
+              <p>A Cairo fashion label focused on considered details, selected fabrics, comfortable cuts, and pieces to wear for years.</p>
             </div>
             <div>
-              <h4>تسوّق</h4>
+              <h4>Shop</h4>
               <ul>
-                <li><a href="shop.html">كل الفساتين</a></li>
-                <li><a href="shop.html?cat=${encodeURIComponent('فساتين سهرة')}">سهرة</a></li>
-                <li><a href="shop.html?cat=${encodeURIComponent('فساتين زفاف')}">زفاف</a></li>
-                <li><a href="shop.html?cat=${encodeURIComponent('فساتين كاجوال')}">كاجوال</a></li>
+                <li><a href="shop.html">Shop all</a></li>
+                <li><a href="shop.html?cat=${encodeURIComponent('Hoodies')}">Hoodies</a></li>
+                <li><a href="shop.html?cat=${encodeURIComponent('Trousers')}">Trousers</a></li>
+                <li><a href="shop.html?cat=${encodeURIComponent('Casualwear')}">Casualwear</a></li>
               </ul>
             </div>
             <div>
-              <h4>المساعدة</h4>
+              <h4>Help</h4>
               <ul>
-                <li><a href="cart.html">سلة التسوّق</a></li>
-                <li><a href="#" data-open-guide>دليل المقاسات</a></li>
-                <li><a href="#" data-open-shipping>الشحن والاستبدال</a></li>
+                <li><a href="cart.html">Shopping bag</a></li>
+                <li><a href="#" data-open-guide>Size guide</a></li>
+                <li><a href="#" data-open-shipping>Delivery & returns</a></li>
               </ul>
             </div>
             <div>
-              <h4>تواصل معنا</h4>
+              <h4>Contact us</h4>
               <ul>
-                <li><a href="https://wa.me/${CFG.WHATSAPP_NUMBER}" target="_blank" rel="noopener">واتساب · 01040124131</a></li>
-                <li><a href="${CFG.TIKTOK}" target="_blank" rel="noopener">تيك توك · ${CFG.TIKTOK_HANDLE}</a></li>
+                <li><a href="https://wa.me/${CFG.WHATSAPP_NUMBER}" target="_blank" rel="noopener">WhatsApp · 01040124131</a></li>
+                <li><a href="${CFG.TIKTOK}" target="_blank" rel="noopener">TikTok · ${CFG.TIKTOK_HANDLE}</a></li>
                 <li><span>${CFG.CITY}</span></li>
               </ul>
             </div>
           </div>
           <div class="footer-bottom">
             <span class="en">© ${new Date().getFullYear()} CLOTHINA ATELIER — QUIET LUXURY</span>
-            <span>صُنع بعناية <i class="admin-dot" id="adminDot" title="·"></i></span>
+            <span>Made with care <i class="admin-dot" id="adminDot" title="·"></i></span>
           </div>
         </div>
       </footer>`;
@@ -698,8 +717,8 @@
       const a = document.createElement('a');
       a.id = 'waFab'; a.className = 'wa-fab';
       a.target = '_blank'; a.rel = 'noopener';
-      a.setAttribute('aria-label', 'تواصلي معنا على واتساب');
-      a.href = waLink('السلام عليكم CLOTHINA ✦ عندي استفسار');
+      a.setAttribute('aria-label', 'Contact us on WhatsApp');
+      a.href = waLink('Hello CLOTHINA ✦ I have a question');
       a.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.7-4.7A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8.6 9.4c.4 2.2 2 3.8 4.2 4.2l1-1.2 1.8.7c-.3 1.2-1.4 1.9-2.6 1.8-2.9-.3-5.2-2.6-5.5-5.5-.1-1.2.6-2.3 1.8-2.6l.7 1.8-1.4.8Z"/></svg>`;
       document.body.appendChild(a);
     }
@@ -710,61 +729,61 @@
      ========================================================== */
   function buildOrderMessage(order) {
     const L = [];
-    L.push('✦ طلب جديد — CLOTHINA ✦');
-    L.push('رقم الطلب: ' + order.code);
+    L.push('✦ NEW CLOTHINA ORDER ✦');
+    L.push('Order number: ' + order.code);
     L.push('');
-    L.push('— بيانات العميل —');
-    L.push('الاسم: ' + order.name);
-    L.push('الجوال: ' + order.phone);
-    if (order.city) L.push('المدينة: ' + order.city);
-    if (order.address) L.push('العنوان: ' + order.address);
+    L.push('— CUSTOMER DETAILS —');
+    L.push('Name: ' + order.name);
+    L.push('Phone: ' + order.phone);
+    if (order.city) L.push('City: ' + order.city);
+    if (order.address) L.push('Address: ' + order.address);
     L.push('');
-    L.push('— المنتجات —');
+    L.push('— ITEMS —');
     order.items.forEach((i, n) => {
       L.push(`${n + 1}) ${i.title}${i.title_en ? ' / ' + i.title_en : ''}`);
-      if (i.size) L.push('   المقاس: ' + i.size);
-      if (i.color) L.push('   اللون: ' + i.color);
-      L.push('   الكمية: ' + (i.qty || 1) + ' — السعر: ' + util.money((i.price || 0) * (i.qty || 1)));
-      if (i.note) L.push('   ملاحظة: ' + i.note);
+      if (i.size) L.push('   Size: ' + i.size);
+      if (i.color) L.push('   Color: ' + i.color);
+      L.push('   Qty: ' + (i.qty || 1) + ' — Price: ' + util.money((i.price || 0) * (i.qty || 1)));
+      if (i.note) L.push('   Note: ' + i.note);
     });
     L.push('');
 
     /* قسم المقاسات (اختياري) — يروح مع الرسالة */
     const mes = order.measurements || {};
     const mKeys = [
-      ['height', 'الطول'], ['bust', 'الصدر'], ['waist', 'الوسط'],
-      ['hips', 'الأرداف'], ['shoulder', 'الكتف'], ['sleeve', 'طول الكم'], ['notes', 'ملاحظات المقاس']
+      ['height', 'Height'], ['bust', 'Bust'], ['waist', 'Waist'],
+      ['hips', 'Hips'], ['shoulder', 'Shoulder'], ['sleeve', 'Sleeve length'], ['notes', 'Fit notes']
     ];
     const mFilled = mKeys.filter(([k]) => mes[k]);
     const mImages = mes.images || [];
     if (mFilled.length || mImages.length) {
-      L.push('— المقاسات (اختياري) —');
-      mFilled.forEach(([k, label]) => L.push(`${label}: ${mes[k]}${['height', 'bust', 'waist', 'hips', 'shoulder', 'sleeve'].includes(k) ? ' سم' : ''}`));
+      L.push('— MEASUREMENTS (OPTIONAL) —');
+      mFilled.forEach(([k, label]) => L.push(`${label}: ${mes[k]}${['height', 'bust', 'waist', 'hips', 'shoulder', 'sleeve'].includes(k) ? ' cm' : ''}`));
       if (mImages.length) {
-        L.push('صور المقاسات:');
+        L.push('Measurement photos:');
         mImages.forEach((u, n) => L.push(`${n + 1}) ${u}`));
       }
       L.push('');
     }
 
-    if (order.subtotal != null) L.push('المجموع: ' + util.money(order.subtotal));
+    if (order.subtotal != null) L.push('Subtotal: ' + util.money(order.subtotal));
     if (order.couponCode || order.discount) {
-      L.push(`الخصم${order.couponCode ? ' (كوبون ' + order.couponCode + ')' : ''}: −` + util.money(order.discount || 0));
+      L.push(`Discount${order.couponCode ? ' (coupon ' + order.couponCode + ')' : ''}: −` + util.money(order.discount || 0));
     }
-    if (order.shipping) L.push('التوصيل: ' + util.money(order.shipping));
-    L.push('الإجمالي: ' + util.money(order.total));
+    if (order.shipping) L.push('Delivery: ' + util.money(order.shipping));
+    L.push('Total: ' + util.money(order.total));
     L.push('');
-    L.push('— طريقة الدفع —');
+    L.push('— PAYMENT —');
     L.push(order.payment);
     if (order.paymentId === 'vodafone_cash') {
-      L.push(`دفعة فودافون كاش المقدمة (${Number(CFG.DEPOSIT_PERCENT) || 50}٪): ${util.moneyAr(order.deposit || 0)}`);
-      L.push(`رقم التحويل: ${CFG.VODAFONE_CASH_NUMBER || '01040124131'}`);
-      L.push('المتبقي عند الاستلام: ' + util.moneyAr(Math.max(0, (order.total || 0) - (order.deposit || 0))));
-      L.push('يرجى إرسال صورة التحويل لتأكيد الأوردر.');
+      L.push(`Vodafone Cash deposit (${Number(CFG.DEPOSIT_PERCENT) || 50}%): ${util.moneyAr(order.deposit || 0)}`);
+      L.push(`Transfer to: ${CFG.VODAFONE_CASH_NUMBER || '01040124131'}`);
+      L.push('Balance due on delivery: ' + util.moneyAr(Math.max(0, (order.total || 0) - (order.deposit || 0))));
+      L.push('Please send a transfer screenshot to confirm your order.');
     }
-    if (order.notes) { L.push(''); L.push('ملاحظات: ' + order.notes); }
+    if (order.notes) { L.push(''); L.push('Notes: ' + order.notes); }
     L.push('');
-    L.push('أُرسل من متجر CLOTHINA');
+    L.push('Sent from the CLOTHINA store');
     return L.join('\n');
   }
 
@@ -795,19 +814,19 @@
 
   const GUIDE_HTML = `
     <div class="modal-head">
-      <h3>دليل المقاسات</h3>
-      <button class="modal-close" data-close-modal aria-label="إغلاق">${icons.close}</button>
+      <h3>Size guide</h3>
+      <button class="modal-close" data-close-modal aria-label="Close">${icons.close}</button>
     </div>
-    <p class="tiny muted">قيسي بمرونة، وإذا كنت بين مقاسين اختاري الأكبر. المقاسات بالسنتيمتر.</p>
+    <p class="tiny muted">Measure comfortably. If you are between sizes, choose the larger size. Measurements are in centimetres.</p>
     <div style="overflow:auto">
       <table style="width:100%;border-collapse:collapse;font-size:13px;text-align:center">
         <thead>
           <tr style="background:var(--bg-secondary)">
-            <th style="padding:10px;border-bottom:1px solid var(--line)">المقاس</th>
-            <th style="padding:10px;border-bottom:1px solid var(--line)">الصدر</th>
-            <th style="padding:10px;border-bottom:1px solid var(--line)">الوسط</th>
-            <th style="padding:10px;border-bottom:1px solid var(--line)">الأرداف</th>
-            <th style="padding:10px;border-bottom:1px solid var(--line)">الطول</th>
+            <th style="padding:10px;border-bottom:1px solid var(--line)">Size</th>
+            <th style="padding:10px;border-bottom:1px solid var(--line)">Bust</th>
+            <th style="padding:10px;border-bottom:1px solid var(--line)">Waist</th>
+            <th style="padding:10px;border-bottom:1px solid var(--line)">Hips</th>
+            <th style="padding:10px;border-bottom:1px solid var(--line)">Length</th>
           </tr>
         </thead>
         <tbody>
@@ -822,7 +841,7 @@
         </tbody>
       </table>
     </div>
-    <p class="tiny muted">إذا تحتاجين مقاس خاص، اكتبيه في ملاحظات الطلب أو ارفعي صورة مقاساتك في صفحة إتمام الطلب.</p>`;
+    <p class="tiny muted">For a custom fit, add a note or upload your measurements at checkout.</p>`;
 
   function guidesModal() {
     if (document.getElementById('guideModal')) return;
@@ -836,15 +855,15 @@
     ship.innerHTML = `
       <div class="modal-card">
         <div class="modal-head">
-          <h3>الشحن والاستبدال</h3>
-          <button class="modal-close" data-close-modal aria-label="إغلاق">${icons.close}</button>
+          <h3>Delivery & returns</h3>
+          <button class="modal-close" data-close-modal aria-label="Close">${icons.close}</button>
         </div>
         <ul style="display:grid;gap:10px;font-size:14px;color:var(--ink-soft);line-height:1.9">
-          <li>— التوصيل داخل مصر خلال ٢–٥ أيام عمل.</li>
+          <li>— Delivery across Egypt in 2–5 business days.</li>
           <li>— ${util.esc(CFG.FREE_SHIPPING_NOTE)}.</li>
-          <li>— الاستبدال أو الإرجاع خلال ١٤ يوم بشرط عدم الاستخدام وبقاء البطاقة.</li>
-          <li>— المقاسات الخاصة تُفصَّل حسب الطلب ولا تُستبدل إلا في حال وجود عيب.</li>
-          <li>— يتم دفع ٥٠٪ من قيمة الطلب مقدماً عبر فودافون كاش والباقي عند الاستلام.</li>
+          <li>— Returns or exchanges within 14 days, provided the item is unused and tags are attached.</li>
+          <li>— Custom-fit pieces are made to order and can only be exchanged if faulty.</li>
+          <li>— A 50% deposit is paid via Vodafone Cash; the balance is due on delivery.</li>
         </ul>
       </div>`;
     document.body.appendChild(ship);
@@ -869,7 +888,7 @@
       : '';
 
     const timedBadge = (st === 'live' && endsAt)
-      ? `<span class="card-old-badge"><span class="dot-live" style="width:5px;height:5px;border-radius:50%;background:#7BC08A;display:inline-block"></span>عرض محدود <span class="cd" data-offer-end="${endsAt.toISOString()}"></span></span>`
+      ? `<span class="card-old-badge"><span class="dot-live" style="width:5px;height:5px;border-radius:50%;background:#7BC08A;display:inline-block"></span>Limited-time offer <span class="cd" data-offer-end="${endsAt.toISOString()}"></span></span>`
       : '';
 
     const priceHTML = st === 'live'
@@ -878,7 +897,7 @@
       : `<span class="card-price">${util.money(p.price)}</span>`;
 
     const quickBtn = opts.quick
-      ? `<button class="card-quick" data-quick="${util.esc(p.id)}">نظرة سريعة <span class="en">+</span></button>`
+      ? `<button class="card-quick" data-quick="${util.esc(p.id)}">Quick view <span class="en">+</span></button>`
       : '';
 
     return `
@@ -896,7 +915,7 @@
         <a class="card-title" href="product.html?id=${encodeURIComponent(p.id)}">${util.esc(p.title)}${
           p.title_en ? ` <span class="en muted" style="font-size:12px;letter-spacing:.16em">${util.esc(p.title_en)}</span>` : ''}</a>
         <div class="card-meta">${priceHTML}</div>
-        ${st === 'live' ? `<span class="price-was">كان بـ <s>${util.money(p.old_price)}</s> والآن ${util.money(p.price)}</span>` : ''}
+        ${st === 'live' ? `<span class="price-was">Was <s>${util.money(p.old_price)}</s> now ${util.money(p.price)}</span>` : ''}
         ${p.category ? `<span class="card-fabric">${util.esc(p.category)}${p.fabric ? ' · ' + util.esc(p.fabric) : ''}</span>` : ''}
       </div>
     </article>`;
@@ -911,7 +930,7 @@
         const end = new Date(el.dataset.offerEnd);
         if (isNaN(end)) return;
         const left = end.getTime() - Date.now();
-        if (left <= 0) { el.textContent = 'انتهى'; el.closest('.offer-strip')?.remove(); return; }
+        if (left <= 0) { el.textContent = 'Ended'; el.closest('.offer-strip')?.remove(); return; }
         el.textContent = offer.countdown(end);
       });
     };
@@ -927,13 +946,13 @@
     if (c) {
       return `<div class="coupon-applied">
           <span class="coupon-tag en">${util.esc(c.code)}</span>
-          <span class="coupon-txt">خصم <b>${Number(c.percent)}%</b> مطبّق على المؤهل من طلبك</span>
-          <button class="coupon-x" data-coupon-remove aria-label="إزالة الكوبون">✕</button>
+          <span class="coupon-txt">Save <b>${Number(c.percent)}%</b> applies to eligible items in your bag</span>
+          <button class="coupon-x" data-coupon-remove aria-label="Remove coupon">✕</button>
         </div>`;
     }
     return `<div class="coupon-form">
         <input class="input en" id="couponInput" placeholder="COUPON CODE" dir="ltr" autocomplete="off">
-        <button class="btn btn--ghost btn--sm" id="couponApply">تطبيق</button>
+        <button class="btn btn--ghost btn--sm" id="couponApply">Apply</button>
       </div>
       <p class="coupon-msg" id="couponMsg"></p>`;
   }
@@ -948,18 +967,18 @@
     const rm = $('[data-coupon-remove]', scope);
     if (rm) ON(rm, 'click', () => {
       coupons.clear();
-      toast('تم إزالة الكوبون');
+      toast('Coupon removed.');
       onChange && onChange();
     });
 
     async function apply() {
       const code = (input?.value || '').trim();
       if (!code) return;
-      if (msg) { msg.textContent = 'جاري التحقق...'; msg.className = 'coupon-msg'; }
+      if (msg) { msg.textContent = 'Verifying…'; msg.className = 'coupon-msg'; }
       if (btn) btn.disabled = true;
       try {
         const res = await coupons.validate(code);
-        toast(`تم تطبيق الكوبون ${res.code} — خصم ${Number(res.percent)}%`, 'ok');
+        toast(`Coupon ${res.code} applied — ${Number(res.percent)}% off.`, 'ok');
         onChange && onChange();
       } catch (err) {
         if (msg) { msg.textContent = err.message; msg.className = 'coupon-msg is-err'; }
@@ -986,7 +1005,7 @@
     ON($('#quickAdmin'), 'click', () => document.dispatchEvent(new CustomEvent('jl:open-admin')));
     ON($('#adminDot'), 'click', () => {
       if (admin.isAdmin()) document.dispatchEvent(new CustomEvent('jl:open-admin'));
-      else toast('وضع الآدمن غير مفعّل على هذا المتصفح');
+      else toast('Admin mode is not enabled in this browser.');
     });
   });
 
@@ -1001,6 +1020,6 @@
   /* ==========================================================
      التصدير
      ========================================================== */
-  window.JL = { CFG, $, $$, ON, util, sb, admin, cart, products, coupons, offer, cardHTML, initCountdowns,
+  window.JL = { CFG, $, $$, ON, util, sb, admin, cart, products, coupons, offer, cardHTML, initCountdowns, normalize, englishField,
     couponBoxHTML, bindCouponBox, modal, toast, loader, waLink, buildOrderMessage, initAccordions, icons, logoSVG };
 })();

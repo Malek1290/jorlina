@@ -26,12 +26,12 @@ function renderSummary() {
       <img src="${util.img(i.image || i.image_url, true)}" alt="">
       <div>
         <b>${util.esc(i.title)} <span class="muted">×${i.qty || 1}</span></b>
-        <span>${[i.size ? 'مقاس ' + i.size : '', i.color || ''].filter(Boolean).join(' · ')}</span>
+        <span>${[i.size ? 'Size ' + i.size : '', i.color || ''].filter(Boolean).join(' · ')}</span>
       </div>
       <b style="font-size:13px">${util.money((i.price || 0) * (i.qty || 1))}</b>
     </div>`).join('');
   $('#cSub').textContent = util.money(cart.subtotal());
-  $('#cShip').textContent = cart.shipping() ? util.money(cart.shipping()) : 'مجاني';
+  $('#cShip').textContent = cart.shipping() ? util.money(cart.shipping()) : 'Free';
 
   /* الكوبون */
   $('#cCouponBlock').innerHTML = window.JL.couponBoxHTML();
@@ -78,16 +78,16 @@ function renderPayNote() {
     <div class="deposit-box">
       <div class="deposit-head">
         <span class="deposit-ico">${icons.cash || ''}</span>
-        <b>دفعة مقدمة ${percent}٪ لتأكيد الأوردر</b>
+        <b>${percent}% deposit to confirm your order</b>
       </div>
       <p>${util.esc(payMethod.note || '')}</p>
       <div class="vodafone-number">
-        <span>رقم فودافون كاش للتحويل</span>
+        <span>Vodafone Cash transfer number</span>
         <b class="en" dir="ltr">${util.esc(CFG.VODAFONE_CASH_NUMBER || '')}</b>
       </div>
       <div class="deposit-split">
-        <span>المبلغ المطلوب تحويله الآن: <b>${util.moneyAr(deposit)}</b></span>
-        <span>المتبقي عند الاستلام: <b>${util.moneyAr(remaining)}</b></span>
+        <span>Amount due now: <b>${util.moneyAr(deposit)}</b></span>
+        <span>Balance due on delivery: <b>${util.moneyAr(remaining)}</b></span>
       </div>
     </div>`;
   const hint = $('#depositHint');
@@ -96,7 +96,7 @@ function renderPayNote() {
 
 function renderMeasures() {
   $('#previewMeasure').innerHTML = measures.map((m, i) =>
-    `<img src="${m.local}" alt="مقاس ${i + 1}" data-rm="${i}" title="اضغطي للحذف">`).join('');
+    `<img src="${m.local}" alt="Measurement ${i + 1}" data-rm="${i}" title="Click to remove">`).join('');
   $$('#previewMeasure img').forEach(img => ON(img, 'click', () => {
     measures.splice(+img.dataset.rm, 1); renderMeasures();
   }));
@@ -121,16 +121,16 @@ async function placeOrder() {
   const confirm = $('#cConfirm').checked;
   const items = cart.get();
 
-  if (!items.length) return (err.textContent = 'سلتك فاضية.');
-  if (name.length < 2) return (err.textContent = 'اكتبي الاسم بالكامل.');
-  if (!/^[0-9+\s-]{8,}$/.test(phone)) return (err.textContent = 'رقم الجوال غير صحيح.');
-  if (!payMethod) return (err.textContent = 'اختاري طريقة الدفع.');
-  if (!confirm) return (err.textContent = 'لازم توافق على تأكيد الطلب.');
+  if (!items.length) return (err.textContent = 'Your bag is empty.');
+  if (name.length < 2) return (err.textContent = 'Please enter your full name.');
+  if (!/^[0-9+\s-]{8,}$/.test(phone)) return (err.textContent = 'Please enter a valid phone number.');
+  if (!payMethod) return (err.textContent = 'Please select a payment method.');
+  if (!confirm) return (err.textContent = 'Please confirm your order details.');
 
   const btn = $('#placeOrder');
   btn.disabled = true;
   const original = btn.innerHTML;
-  btn.innerHTML = 'جاري تجهيز الطلب...';
+  btn.innerHTML = 'Preparing your order…';
 
   const code = util.uid();
 
@@ -144,7 +144,7 @@ async function placeOrder() {
       }
     } catch (e) {
       console.warn('measurements upload skipped:', e.message);
-      toast('صور المقاسات لم ترفع — هنطلبها منك على واتساب', 'warn');
+      toast('Measurement photos could not be uploaded; we will request them via WhatsApp.', 'warn');
     }
   }
 
@@ -178,13 +178,13 @@ async function placeOrder() {
   /* رسالة واتساب — تشمل المقاسات وطريقة الدفع والعربون */
   const msg = buildOrderMessage({
     code, name, phone, city, address, notes,
-    items: items.map(i => ({ ...i, note: [i.size ? 'مقاس ' + i.size : '', i.color || ''].filter(Boolean).join(' · ') })),
+    items: items.map(i => ({ ...i, note: [i.size ? 'Size ' + i.size : '', i.color || ''].filter(Boolean).join(' · ') })),
     total: cart.total(),
     subtotal: cart.subtotal(),
     discount: coupons.breakdown(items).discount,
     couponCode: coupons.get()?.code || null,
     shipping: cart.shipping(),
-    payment: payMethod ? payMethod.title : 'غير محدد',
+    payment: payMethod ? payMethod.title : 'Not specified',
     paymentId: payMethod ? payMethod.id : '',
     deposit: depositAmount(),
     measurements: { ...measureData, images: uploaded }

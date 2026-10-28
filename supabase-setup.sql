@@ -168,7 +168,7 @@ begin
    limit 1;
 
   if c.id is null then
-    return jsonb_build_object('ok', false, 'message', 'الكود غير صحيح أو منتهي الصلاحية');
+    return jsonb_build_object('ok', false, 'message', 'Invalid or expired code.');
   end if;
 
   return jsonb_build_object(
@@ -224,26 +224,26 @@ for insert with check (bucket_id = 'measurements');
 -- ============================================================
 insert into public.items (title, title_en, description, price, old_price, image_url, images, category, fabric, sizes, colors, badge, sort)
 select * from (values
-  ('سيلين', 'CELINE',
-   'فستان ساتان بقصة انسيابية ورقبة كاول ناعمة، مبطن بالكامل ويناسب السهرات والمناسبات الخاصة. القماش ينسدل بشكل أنيق على الجسم بدون أي تكلف.',
+  ('Celine', 'CELINE',
+   'A polished everyday look in a soft oversized hoodie and easy, well-cut trousers.',
    4200::numeric, 4800::numeric, 'assets/img/p1.jpg', array['assets/img/p1.jpg','assets/img/hero.jpg'],
-   'فساتين سهرة', 'ساتان حريري', array['S','M','L','XL'], '[{"name":"أوف وايت","hex":"#EFECE6"}]'::jsonb, 'الأكثر طلباً', 1),
-  ('ليا', 'LEA',
-   'فستان طويل من الكريب المطفي بلون زيتوني هادئ، بأكمام طويلة وتفاصيل كسرات دقيقة. ستايل محتشم وأنيق في نفس الوقت.',
+   'Casualwear', 'Soft knit', array['S','M','L','XL'], '[{"name":"أوف وايت","hex":"#EFECE6"}]'::jsonb, 'Bestseller', 1),
+  ('Lea', 'LEA',
+   'A relaxed oversized hoodie paired with comfortable, neatly tailored trousers.',
    3600::numeric, null, 'assets/img/p2.jpg', array['assets/img/p2.jpg'],
-   'فساتين سهرة', 'كريب مطفي', array['XS','S','M','L','XL'], '[{"name":"زيتوني","hex":"#8A8C7F"}]'::jsonb, 'جديد', 2),
-  ('نور', 'NOOR',
-   'فستان شيفون بلون البيج الرملي مع حزام ناعم يبرز الوسط. خفيف ومريح ومثالي للمناسبات النهارية.',
+   'Casualwear', 'Soft knit', array['XS','S','M','L','XL'], '[{"name":"زيتوني","hex":"#8A8C7F"}]'::jsonb, 'New', 2),
+  ('Noor', 'NOOR',
+   'An easy casual outfit in warm neutral tones, designed for comfort throughout the day.',
    2850::numeric, null, 'assets/img/p3.jpg', array['assets/img/p3.jpg'],
-   'فساتين كاجوال', 'شيفون', array['S','M','L'], '[{"name":"بيج رملي","hex":"#D9CDBB"}]'::jsonb, '', 3),
-  ('فيرونيك', 'VERONIQUE',
-   'فستان مخمل أسود بقصة كلاسيكية ولمعة راقية، بيفضل محبوب في كل موسم. تصميم هادئ وواثق.',
+   'Casualwear', 'Cotton blend', array['S','M','L'], '[{"name":"بيج رملي","hex":"#D9CDBB"}]'::jsonb, '', 3),
+  ('Veronique', 'VERONIQUE',
+   'A timeless dark-toned casual set with a roomy top and a clean, flattering silhouette.',
    3900::numeric, 4400::numeric, 'assets/img/p4.jpg', array['assets/img/p4.jpg'],
-   'فساتين سهرة', 'مخمل', array['S','M','L','XL'], '[{"name":"أسود","hex":"#1A1A1A"}]'::jsonb, 'آخر قطعتين', 4),
-  ('أريا', 'ARIA',
-   'فستان زفاف بلون الأوف وايت بأسدال طويلة وأكمام بتفاصيل ناعمة. مصمم ليكون خفيف على الجسم ويزيد إشراقة اليوم.',
+   'Casualwear', 'Cotton blend', array['S','M','L','XL'], '[{"name":"أسود","hex":"#1A1A1A"}]'::jsonb, 'Limited pieces', 4),
+  ('Aria', 'ARIA',
+   'A soft ivory hoodie and well-fitting trousers create an effortless, polished everyday look.',
    8600::numeric, null, 'assets/img/p5.jpg', array['assets/img/p5.jpg'],
-   'فساتين زفاف', 'ساتان لؤلؤي', array['XS','S','M','L','مقاس خاص'], '[{"name":"أوف وايت","hex":"#F4F1EA"}]'::jsonb, 'أتيليه', 5)
+   'Casualwear', 'Cotton blend', array['XS','S','M','L','مقاس خاص'], '[{"name":"أوف وايت","hex":"#F4F1EA"}]'::jsonb, 'Atelier pick', 5)
 ) as v(title, title_en, description, price, old_price, image_url, images, category, fabric, sizes, colors, badge, sort)
 where not exists (select 1 from public.items);
 
