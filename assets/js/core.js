@@ -888,7 +888,7 @@
       : '';
 
     const timedBadge = (st === 'live' && endsAt)
-      ? `<span class="card-old-badge"><span class="dot-live" style="width:5px;height:5px;border-radius:50%;background:#7BC08A;display:inline-block"></span>Limited-time offer <span class="cd" data-offer-end="${endsAt.toISOString()}"></span></span>`
+      ? `<span class="card-old-badge"><span class="dot-live" style="width:5px;height:5px;border-radius:50%;background:var(--color-success);display:inline-block"></span>Limited-time offer <span class="cd" data-offer-end="${endsAt.toISOString()}"></span></span>`
       : '';
 
     const priceHTML = st === 'live'

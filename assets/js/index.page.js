@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* Silk في التحميل والهيرو */
   const loaderCv = document.getElementById('jl-loader-canvas');
   const heroCv = document.getElementById('hero-canvas');
-  initSilk(loaderCv, { opacity: .92, amp: 1, colorA: '#7C532B', colorB: '#8C5E33', colorC: '#F3E9E0' });
-  initSilk(heroCv, { opacity: 1, amp: 1.25, tilt: .1, colorA: '#7C532B', colorB: '#8C5E33', colorC: '#F3E9E0' });
+  initSilk(loaderCv, { opacity: .92, amp: 1, colorA: '#7C532B', colorB: '#D4AF37', colorC: '#F8F5F0' });
+  initSilk(heroCv, { opacity: 1, amp: 1.25, tilt: .1, colorA: '#7C532B', colorB: '#D4AF37', colorC: '#F8F5F0' });
 
   /* المنتجات */
   const grid = $('#homeGrid');
