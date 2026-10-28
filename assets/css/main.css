@@ -181,7 +181,8 @@ ul{margin:0;padding:0;list-style:none}
   transform:translateY(101%);pointer-events:none;
 }
 #jl-loader.is-leaving .jl-loader-bar i{animation:none;width:100%;background:var(--brand-primary);transform:none}
-#jl-loader.is-leaving{transition:opacity .5s ease .25s}
+#jl-loader.is-leaving{opacity:0;pointer-events:none;transition:opacity .5s ease .15s}
+#jl-loader.is-leaving #jl-loader-canvas{opacity:0;transition:opacity .4s ease}
 
 /* ============================================================
    HEADER

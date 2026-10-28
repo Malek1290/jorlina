@@ -454,9 +454,6 @@
     const pctEl = $('.jl-loader-pct', el);
     const mark = $('.jl-loader-logo', el) || $('.jl-loader-mark', el);
     const bar = $('.jl-loader-bar', el);
-    const reduced = window.matchMedia
-      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      : true;
     const started = Date.now();
     let p = 0;
     let done = false;
@@ -493,23 +490,9 @@
 
       const out = () => {
         if (!el.isConnected) return revealPage();
+        // Keep the loader independent of GSAP; a failed optional animation must never block entry.
         el.classList.add('is-leaving');
-        try {
-          if (window.gsap && !reduced) {
-            const timeline = window.gsap.timeline();
-            timeline.to(el, { opacity: 0, duration: .45, ease: 'power2.in' });
-            const canvas = $('#jl-loader-canvas', el);
-            if (canvas) timeline.to(canvas, { opacity: 0, duration: .3 }, 0);
-            timeline.call(revealPage);
-          } else {
-            revealPage();
-          }
-        } catch (error) {
-          console.warn('[CLOTHINA] Loader animation skipped:', error);
-          revealPage();
-        }
-        // If GSAP is present but its timeline is interrupted, still release the page.
-        setTimeout(revealPage, 900);
+        setTimeout(revealPage, 800);
       };
       setTimeout(out, 180);
     };
@@ -525,19 +508,11 @@
       tryFinish();
     };
 
-    try {
-      if (window.gsap && !reduced) {
-        const visibleElements = [bar, pctEl].filter(Boolean);
-        const timeline = window.gsap.timeline({ defaults: { ease: 'power3.out' } });
-        if (mark) timeline.fromTo(mark, { opacity: 0, scale: .92, y: 8 }, { opacity: 1, scale: 1, y: 0, duration: 1.05, delay: .12 });
-        if (visibleElements.length) timeline.from(visibleElements, { opacity: 0, y: 10, duration: .7, stagger: .08 }, mark ? '-=.6' : 0);
-      } else {
-        [bar, pctEl].filter(Boolean).forEach(node => { node.style.opacity = '1'; });
-      }
-    } catch (error) {
-      console.warn('[CLOTHINA] Loader entrance animation skipped:', error);
-      [mark, bar, pctEl].filter(Boolean).forEach(node => { node.style.opacity = '1'; });
-    }
+    // The logo and progress bar use CSS; do not pass optional/missing nodes into GSAP.
+    [mark, bar, pctEl].filter(Boolean).forEach(node => {
+      node.style.opacity = '1';
+      node.style.visibility = 'visible';
+    });
 
     const heroImg = document.querySelector('.hero-media img');
     if (heroImg && !heroImg.complete) {
