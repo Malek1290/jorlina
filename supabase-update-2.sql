@@ -52,7 +52,7 @@ begin
      and (ends_at is null or ends_at >= now())
    limit 1;
   if c.id is null then
-    return jsonb_build_object('ok', false, 'message', 'الكود غير صحيح أو منتهي الصلاحية');
+    return jsonb_build_object('ok', false, 'message', 'Invalid or expired code.');
   end if;
   return jsonb_build_object('ok', true, 'code', c.code, 'percent', c.percent,
                             'product_ids', to_jsonb(c.product_ids), 'ends_at', c.ends_at);

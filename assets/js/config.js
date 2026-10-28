@@ -31,7 +31,7 @@ window.JL_CONFIG = {
   TABLE_COUPONS: "coupons",           // كوبونات/خصومات (شغّل supabase-update-2.sql)
 
   /* -------- الهوية والتواصل -------- */
-  CITY: "القاهرة، مصر",
+  CITY: "Cairo, Egypt",
   INSTAGRAM: "",
   TIKTOK: "https://www.tiktok.com/@clothinaa__0",
   INSTAGRAM_HANDLE: "",
@@ -43,27 +43,27 @@ window.JL_CONFIG = {
 
   /* -------- المتجر -------- */
   WHATSAPP_NUMBER: "201040124131",       // واتساب مصر: 01040124131
-  CURRENCY: "ج.م",                        // الجنيه المصري
+  CURRENCY: "EGP",                        // الجنيه المصري
   SHIPPING: 0,                            // مصاريف شحن ثابتة (0 = مجاني)
-  FREE_SHIPPING_NOTE: "توصيل لجميع محافظات مصر",
+  FREE_SHIPPING_NOTE: "Delivery across Egypt",
 
   /* الاختيارات الافتراضية (تظهر للعميل في صفحة المنتج) */
-  DEFAULT_SIZES: ["XS", "S", "M", "L", "XL", "XXL", "مقاس خاص"],
+  DEFAULT_SIZES: ["XS", "S", "M", "L", "XL", "XXL", "Custom"],
   DEFAULT_COLORS: [
-    { name: "أوف وايت", hex: "#EFECE6" },
-    { name: "بيج رملي", hex: "#D9CDBB" },
-    { name: "زيتوني", hex: "#8A8C7F" },
-    { name: "أسود", hex: "#1A1A1A" }
+    { name: "Ivory", hex: "#EFECE6" },
+    { name: "Sand", hex: "#D9CDBB" },
+    { name: "Olive", hex: "#8A8C7F" },
+    { name: "Black", hex: "#1A1A1A" }
   ],
-  CATEGORIES: ["فساتين سهرة", "فساتين زفاف", "فساتين كاجوال", "عبايات", "إطلالات"],
+  CATEGORIES: ["Eveningwear", "Bridal", "Casualwear", "Abayas", "Looks", "Hoodies", "Trousers", "Sets"],
   PAYMENT_METHODS: [
     {
       id: "vodafone_cash",
-      title: "فودافون كاش",
-      sub: "دفعة مقدمة ٥٠٪ من إجمالي الطلب",
+      title: "Vodafone Cash",
+      sub: "50% deposit of the order total",
       logo: "VC",
       depositPercent: 50,
-      note: "حوّلي ٥٠٪ من إجمالي الطلب على فودافون كاش لتأكيد الأوردر. يتم دفع المبلغ المتبقي عند الاستلام."
+      note: "Pay a 50% deposit via Vodafone Cash to confirm your order. The remaining balance is due on delivery."
     }
   ]
 };

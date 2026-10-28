@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* الأقسام */
   const cats = ['', ...new Set(list.map(p => p.category).filter(Boolean))];
   chipsBox.innerHTML = cats.map(c => `
-    <button class="chip ${c === cat ? 'is-on' : ''}" data-cat="${util.esc(c)}">${c ? util.esc(c) : 'كل الفساتين'}</button>`).join('');
+    <button class="chip ${c === cat ? 'is-on' : ''}" data-cat="${util.esc(c)}">${c ? util.esc(c) : 'Shop all'}</button>`).join('');
   $$('.chip', chipsBox).forEach(b => ON(b, 'click', () => {
     cat = b.dataset.cat;
     $$('.chip', chipsBox).forEach(x => x.classList.toggle('is-on', x === b));
@@ -33,9 +33,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!rows.length) {
       grid.innerHTML = `
         <div class="empty" style="grid-column:1/-1">
-          <b>ما فيه منتجات في هذا القسم حالياً</b>
-          <span class="tiny">جرّبي قسم ثاني أو شوفي كل الفساتين.</span>
-          <a class="btn btn--ghost btn--sm" href="shop.html">كل الفساتين</a>
+          <b>No items in this collection yet</b>
+          <span class="tiny">Try another collection or browse everything.</span>
+          <a class="btn btn--ghost btn--sm" href="shop.html">Shop all</a>
         </div>`;
     } else {
       grid.innerHTML = rows.map((p, i) => cardHTML(p, i)).join('');
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         $$('#shopGrid .card').forEach(c => { c.style.opacity = 1; c.style.transform = 'none'; });
       }
     }
-    countEl.textContent = rows.length + ' قطعة';
+    countEl.textContent = rows.length + ' items';
   }
 
   ON(sortSel, 'change', render);

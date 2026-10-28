@@ -27,9 +27,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!p) {
     $('#pdp').innerHTML = `
       <div class="empty" style="grid-column:1/-1">
-        <b>المنتج غير موجود</b>
-        <span class="tiny">ممكن الرابط قديم أو المنتج اتشال.</span>
-        <a class="btn btn--ghost btn--sm" href="shop.html">رجوع للمتجر</a>
+        <b>Product not found</b>
+        <span class="tiny">This link may be outdated or the item may have been removed.</span>
+        <a class="btn btn--ghost btn--sm" href="shop.html">Back to shop</a>
       </div>`;
     return;
   }
@@ -48,9 +48,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const off = offer.pct(p);
   $('#pdpPrice').innerHTML = `
     <span>${util.money(p.price)}</span>
-    ${st === 'live' ? `<span class="old">${util.money(p.old_price)}</span><span class="save">خصم ${off}%</span>` : ''}`;
+    ${st === 'live' ? `<span class="old">${util.money(p.old_price)}</span><span class="save">Save ${off}%</span>` : ''}`;
 
-  /* شريط العرض المحدود (كان بكذا والآن كذا — لفترة محدودة) */
+  /* شريط العرض المحدود (كان بكذا now كذا — لفترة محدودة) */
   const offerHost = document.createElement('div');
   offerHost.style.display = 'grid';
   offerHost.style.gap = '8px';
@@ -58,29 +58,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     offerHost.innerHTML = `
       <div class="offer-strip">
         <span class="dot-live"></span>
-        <span>عرض محدود — كان بـ <b>${util.money(p.old_price)}</b> والآن <b>${util.money(p.price)}</b></span>
+        <span>Limited-time offer — was <b>${util.money(p.old_price)}</b> now <b>${util.money(p.price)}</b></span>
         <span class="cd" data-offer-end="${offer.endsAt(p).toISOString()}"></span>
       </div>`;
     setTimeout(() => window.JL.initCountdowns(), 0);
   } else if (st === 'live') {
     offerHost.innerHTML = `
       <div class="offer-strip"><span class="dot-live"></span>
-      <span>السعر قبل الخصم <b>${util.money(p.old_price)}</b> — والآن <b>${util.money(p.price)}</b></span></div>`;
+      <span>Was <b>${util.money(p.old_price)}</b> — now <b>${util.money(p.price)}</b></span></div>`;
   }
   $('#pdpPrice').after(offerHost);
 
   /* الوصف */
-  $('#pdpDesc').textContent = p.description || 'فستان من أتيليه CLOTHINA بتفاصيل هادية وقصّة مريحة.';
+  $('#pdpDesc').textContent = p.description || 'A CLOTHINA piece with considered details and a comfortable fit.';
 
   /* الجاليري */
   const stage = $('#stage');
   const images = p.images?.length ? p.images : [p.image_url];
   stage.insertAdjacentHTML('afterbegin', images.map((src, i) =>
-    `<img src="${util.img(src)}" alt="${util.esc(p.title)} — صورة ${i + 1}" class="${i === 0 ? 'is-on' : ''}" data-i="${i}">`).join(''));
+    `<img src="${util.img(src)}" alt="${util.esc(p.title)} — Image ${i + 1}" class="${i === 0 ? 'is-on' : ''}" data-i="${i}">`).join(''));
   stage.querySelector('.skeleton')?.remove();
 
   $('#thumbs').innerHTML = images.map((src, i) =>
-    `<button class="${i === 0 ? 'is-on' : ''}" data-thumb="${i}" aria-label="صورة ${i + 1}">
+    `<button class="${i === 0 ? 'is-on' : ''}" data-thumb="${i}" aria-label="Image ${i + 1}">
        <img src="${util.img(src, true)}" alt="" loading="lazy">
      </button>`).join('');
 
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('#sizeHint').textContent = state.size;
     $('#sizeHint').classList.remove('muted');
   }));
-  $('#sizeHint').textContent = state.size || 'اختاري مقاس';
+  $('#sizeHint').textContent = state.size || 'Choose a size';
 
   /* الألوان */
   const colors = p.colors || [];
@@ -139,19 +139,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* تفاصيل */
   $('#accDetails').innerHTML = `
     <ul>
-      ${p.fabric ? `<li>الخامة: ${util.esc(p.fabric)}</li>` : ''}
-      ${p.category ? `<li>القسم: ${util.esc(p.category)}</li>` : ''}
-      ${p.title_en ? `<li>الاسم: ${util.esc(p.title_en)}</li>` : ''}
-      <li>القصّة: مريحة ومبطنة بالكامل.</li>
-      <li>التغليف: علبة قماشية + ورق حريري (جاهز كهدية).</li>
-      <li>العربون: ٥٠٪ من قيمة الطلب عبر فودافون كاش مقدماً، والباقي عند الاستلام.</li>
+      ${p.fabric ? `<li>Fabric: ${util.esc(p.fabric)}</li>` : ''}
+      ${p.category ? `<li>Collection: ${util.esc(p.category)}</li>` : ''}
+      ${p.title_en ? `<li>Name: ${util.esc(p.title_en)}</li>` : ''}
+      <li>Fit: comfortable and fully lined.</li>
+      <li>Packaging: fabric box and tissue paper, ready for gifting.</li>
+      <li>Deposit: 50% via Vodafone Cash, with the balance due on delivery.</li>
     </ul>`;
 
   /* دليل القياسات */
   ON($('#openGuide'), 'click', () => {
     const body = $('#sizeModalBody');
     if (p.size_guide_url) {
-      body.innerHTML = `<img src="${p.size_guide_url}" alt="دليل قياسات ${util.esc(p.title)}" style="width:100%;border-radius:14px">`;
+      body.innerHTML = `<img src="${p.size_guide_url}" alt="Size guide for ${util.esc(p.title)}" style="width:100%;border-radius:14px">`;
     } else {
       body.innerHTML = document.querySelector('#guideModal').innerHTML;
       body.querySelector('.modal-head')?.remove();
@@ -174,20 +174,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   ON($('#addToCart'), 'click', () => {
-    if (!state.size) return toast('اختاري المقاس أولاً', 'warn');
+    if (!state.size) return toast('Please choose a size first.', 'warn');
     cart.add(itemToAdd());
-    toast('تمت الإضافة للسلة', 'ok');
+    toast('Added to your bag.', 'ok');
     bumpCart();
   });
 
   ON($('#buyNow'), 'click', () => {
-    if (!state.size) return toast('اختاري المقاس أولاً', 'warn');
+    if (!state.size) return toast('Please choose a size first.', 'warn');
     cart.add(itemToAdd());
     location.href = 'cart.html';
   });
 
   /* استفسار على واتساب */
-  const ask = `السلام عليكم CLOTHINA ✦\nعندي استفسار عن: ${p.title}${p.title_en ? ' / ' + p.title_en : ''}\n${location.href}`;
+  const ask = `Hello CLOTHINA ✦\nI have a question about: ${p.title}${p.title_en ? ' / ' + p.title_en : ''}\n${location.href}`;
   $('#waAsk').href = waLink(ask);
 
   /* المشابهة */

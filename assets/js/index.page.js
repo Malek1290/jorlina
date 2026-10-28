@@ -74,17 +74,17 @@ function quickView(p) {
         <div style="display:grid;gap:14px;align-content:start">
           <div class="card-meta"><span class="card-price" style="font-size:18px">${util.money(p.price)}</span>
             ${offer.state(p) === 'live' ? `<span class="card-price-old">${util.money(p.old_price)}</span><span class="save" style="font-size:11px;background:var(--bg-swirl);color:var(--accent-olive-dark);padding:3px 9px;border-radius:999px">-${offer.pct(p)}%</span>` : ''}</div>
-          ${offer.state(p) === 'live' && offer.endsAt(p) ? `<div class="offer-strip" style="font-size:12px"><span class="dot-live"></span>عرض محدود ينتهي خلال <span class="cd" data-offer-end="${offer.endsAt(p).toISOString()}"></span></div>` : ''}
+          ${offer.state(p) === 'live' && offer.endsAt(p) ? `<div class="offer-strip" style="font-size:12px"><span class="dot-live"></span>Limited offer ends in <span class="cd" data-offer-end="${offer.endsAt(p).toISOString()}"></span></div>` : ''}
           <p class="tiny muted" style="line-height:1.9">${util.esc((p.description || '').slice(0, 130))}${(p.description || '').length > 130 ? '…' : ''}</p>
-          ${sizes ? `<div class="opt"><span class="opt-label">المقاس</span><div class="opt-grid">${sizes}</div></div>` : ''}
-          ${colors ? `<div class="opt"><span class="opt-label">اللون</span><div class="opt-grid">${colors}</div></div>` : ''}
-          <button class="btn btn--block" id="quickAdd">أضيفي للسلة</button>
-          <a class="link-u" href="product.html?id=${encodeURIComponent(p.id)}" style="justify-self:start">كل التفاصيل <span class="en">→</span></a>
+          ${sizes ? `<div class="opt"><span class="opt-label">Size</span><div class="opt-grid">${sizes}</div></div>` : ''}
+          ${colors ? `<div class="opt"><span class="opt-label">Color</span><div class="opt-grid">${colors}</div></div>` : ''}
+          <button class="btn btn--block" id="quickAdd">Add to bag</button>
+          <a class="link-u" href="product.html?id=${encodeURIComponent(p.id)}" style="justify-self:start">Full details <span class="en">→</span></a>
         </div>
       </div>
     </div>`;
 
-  window.JL.modal.open(m);
+  window.JL.modal.open(id);
   ON(m.querySelector('[data-close]'), 'click', () => window.JL.modal.close(m));
   m.querySelectorAll('[data-q-size]').forEach(b => ON(b, 'click', () => {
     m.querySelectorAll('[data-q-size]').forEach(x => x.classList.remove('is-on'));
@@ -101,7 +101,7 @@ function quickView(p) {
       id: p.id, title: p.title, title_en: p.title_en, price: p.price, qty: 1,
       size, color, image: p.image_url
     });
-    toast('تمت الإضافة للسلة', 'ok');
+    toast('Added to your bag', 'ok');
     window.JL.modal.close(m);
   });
 }

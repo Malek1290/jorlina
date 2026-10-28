@@ -15,18 +15,18 @@ function rowHTML(i) {
           ${i.title_en ? `<span class="en muted" style="font-size:11.5px;letter-spacing:.16em">${util.esc(i.title_en)}</span>` : ''}
         </a>
         <div class="cart-item-opts">
-          ${i.size ? `<span>المقاس: ${util.esc(i.size)}</span>` : ''}
-          ${i.color ? `<span>اللون: ${util.esc(i.color)}</span>` : ''}
+          ${i.size ? `<span>Size: ${util.esc(i.size)}</span>` : ''}
+          ${i.color ? `<span>Color: ${util.esc(i.color)}</span>` : ''}
         </div>
         <div class="cart-item-opts"><span style="background:none;padding:0;color:var(--text-main);font-weight:500">${util.money(i.price)}</span></div>
       </div>
       <div class="cart-item-end">
         <div class="qty" style="height:40px">
-          <button data-dec aria-label="تقليل">−</button>
+          <button data-dec aria-label="Decrease quantity">−</button>
           <span class="val">${i.qty || 1}</span>
-          <button data-inc aria-label="زيادة">+</button>
+          <button data-inc aria-label="Increase quantity">+</button>
         </div>
-        <button class="remove-btn" data-remove>إزالة</button>
+        <button class="remove-btn" data-remove>Remove</button>
       </div>
     </div>`;
 }
@@ -40,7 +40,7 @@ function render() {
 
   $('#sumSub').textContent = util.money(cart.subtotal());
   const ship = cart.shipping();
-  $('#sumShip').textContent = ship ? util.money(ship) : 'مجاني';
+  $('#sumShip').textContent = ship ? util.money(ship) : 'Free';
 
   /* الكوبون */
   $('#couponBlock').innerHTML = window.JL.couponBoxHTML();
@@ -64,7 +64,7 @@ function render() {
     ON(row.querySelector('[data-dec]'), 'click', () => { cart.setQty(key, (it.qty || 1) - 1); render(); });
     ON(row.querySelector('[data-remove]'), 'click', () => {
       cart.remove(key);
-      toast('تم حذف القطعة من السلة');
+      toast('Item removed from your bag.');
       render();
     });
   });
@@ -77,7 +77,7 @@ function render() {
 document.addEventListener('DOMContentLoaded', () => {
   render();
   ON($('#goCheckout'), 'click', () => {
-    if (!cart.get().length) return toast('سلتك فاضية', 'warn');
+    if (!cart.get().length) return toast('Your bag is empty', 'warn');
     location.href = 'checkout.html';
   });
   ON(document, 'jl:cart', render);

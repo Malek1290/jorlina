@@ -1,13 +1,13 @@
 /* ============================================================
    CLOTHINA — ADMIN PANEL (مخفي)
-   • إضافة منتج + تعديل منتج موجود
-   • عرض سعر لفترة محدودة (كان بكذا والآن كذا)
+   • Add منتج + Edit item موجود
+   • عرض سعر لفترة محدودة (كان بكذا now كذا)
    • كوبونات / خصومات (نسبة % + اختيار المنتجات)
    • يظهر فقط لو وضع الآدمن مفعّل على المتصفح
    ============================================================ */
 (() => {
   'use strict';
-  const { CFG, $, $$, ON, util, sb, admin, products, toast, icons } = window.JL;
+  const { CFG, $, $$, ON, util, sb, admin, products, toast, icons, normalize, englishField } = window.JL;
 
   if (!admin.isAdmin()) {
     document.addEventListener('jl:open-admin', () => {
@@ -16,13 +16,13 @@
     return;
   }
 
-  /* ============================ الحالة ============================ */
+  /* ============================ Status ============================ */
   const state = {
     images: [],       // [{file?, url, existing?}]
     guide: null,      // {file?, url, existing?}
     sizes: new Set(),
     colors: [],
-    editingId: null,  // null = منتج جديد
+    editingId: null,  // null = New item
     tab: 'new',
     productsCache: [],
     couponsCache: []
@@ -38,8 +38,8 @@
     const fab = document.createElement('button');
     fab.className = 'admin-fab on';
     fab.id = 'adminFab';
-    fab.setAttribute('aria-label', 'لوحة التحكم — Administrator');
-    fab.innerHTML = `${icons.admin}<span>لوحة التحكم</span>`;
+    fab.setAttribute('aria-label', 'Admin dashboard — Administrator');
+    fab.innerHTML = `${icons.admin}<span>Admin dashboard</span>`;
     document.body.appendChild(fab);
 
     const sheet = document.createElement('aside');
@@ -47,15 +47,15 @@
     sheet.id = 'adminSheet';
     sheet.innerHTML = `
       <div class="admin-head">
-        <b>لوحة تحكم CLOTHINA <span class="tag en">ADMIN</span></b>
-        <button class="icon-btn" id="adminClose" aria-label="إغلاق">${icons.close}</button>
+        <b>CLOTHINA Admin <span class="tag en">ADMIN</span></b>
+        <button class="icon-btn" id="adminClose" aria-label="Close">${icons.close}</button>
       </div>
-      <div class="admin-tabs" role="tablist" aria-label="خيارات لوحة التحكم">
-        <button class="admin-tab is-on" role="tab" data-tab="new">منتج جديد</button>
-        <button class="admin-tab" role="tab" data-tab="list">المنتجات</button>
-        <button class="admin-tab" role="tab" data-tab="coupons">الكوبونات <span class="cnt" id="couponsCnt">0</span></button>
-        <button class="admin-tab" role="tab" data-tab="orders">الطلبات</button>
-        <button class="admin-tab" role="tab" data-tab="settings">الإعدادات</button>
+      <div class="admin-tabs" role="tablist" aria-label="Admin dashboard options">
+        <button class="admin-tab is-on" role="tab" data-tab="new">New item</button>
+        <button class="admin-tab" role="tab" data-tab="list">Products</button>
+        <button class="admin-tab" role="tab" data-tab="coupons">Coupons <span class="cnt" id="couponsCnt">0</span></button>
+        <button class="admin-tab" role="tab" data-tab="orders">Orders</button>
+        <button class="admin-tab" role="tab" data-tab="settings">Settings</button>
       </div>
 
       <div class="admin-body" id="adminBody">
@@ -63,79 +63,79 @@
         <!-- ==================== منتج (جديد / تعديل) ==================== -->
         <div data-panel="new" style="display:grid;gap:14px">
           <div class="editing-banner hide" id="editBanner">
-            <span>بتعدّلي الآن: <b id="editName">—</b></span>
-            <button class="btn-mini" id="cancelEdit">إلغاء التعديل وبدء منتج جديد</button>
+            <span>Editing: <b id="editName">—</b></span>
+            <button class="btn-mini" id="cancelEdit">Cancel edit and start a new item</button>
           </div>
 
           <div class="admin-note">
-            الصور تترفع على Supabase Storage (bucket: <b class="en">${util.esc(CFG.BUCKET_PRODUCTS)}</b>) وبعدها بيتحفظ الرابط + البيانات في جدول <b class="en">${util.esc(CFG.TABLE_ITEMS)}</b>.
+            Images are uploaded to Supabase Storage (bucket: <b class="en">${util.esc(CFG.BUCKET_PRODUCTS)}</b>) and the image links and item data are saved to table <b class="en">${util.esc(CFG.TABLE_ITEMS)}</b>.
           </div>
 
           <div class="field">
-            <label>صور المنتج <span class="muted tiny">(أول صورة = الرئيسية)</span></label>
+            <label>Product images <span class="muted tiny">(first image is the main image)</span></label>
             <div class="dropzone" id="dropProducts">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
-              <span>اسحبي الصور هنا أو اضغطي للاختيار</span>
-              <small>JPG / PNG / WEBP — حتى 6 صور</small>
+              <span>Drag images here or click to browse</span>
+              <small>JPG / PNG / WEBP — up to 6 images</small>
             </div>
             <input type="file" id="fileProducts" accept="image/*" multiple hidden>
             <div class="preview-strip" id="previewProducts"></div>
           </div>
 
           <div class="form-grid">
-            <div class="field"><label>اسم المنتج بالعربي <span class="req">*</span></label><input class="input" id="fTitle" placeholder="مثال: سيلين"></div>
-            <div class="field"><label>الاسم بالإنجليزي</label><input class="input en" id="fTitleEn" placeholder="CELINE" dir="ltr"></div>
-            <div class="field"><label>السعر الحالي <span class="req">*</span></label><input class="input" id="fPrice" type="number" min="0" step="50" placeholder="4200"></div>
-            <div class="field"><label>السعر قبل الخصم (كان بـ)</label><input class="input" id="fOldPrice" type="number" min="0" step="50" placeholder="4800"></div>
-            <div class="field"><label>القسم</label>
+            <div class="field"><label>Item name <span class="req">*</span></label><input class="input" id="fTitle" placeholder="e.g. Celine"></div>
+            <div class="field"><label>English name</label><input class="input en" id="fTitleEn" placeholder="CELINE" dir="ltr"></div>
+            <div class="field"><label>Current price <span class="req">*</span></label><input class="input" id="fPrice" type="number" min="0" step="50" placeholder="4200"></div>
+            <div class="field"><label>Original price (was)</label><input class="input" id="fOldPrice" type="number" min="0" step="50" placeholder="4800"></div>
+            <div class="field"><label>Category</label>
               <select class="select-full" id="fCategory">
-                <option value="">— اختاري —</option>
+                <option value="">— Select —</option>
                 ${(CFG.CATEGORIES || []).map(c => `<option value="${util.esc(c)}">${util.esc(c)}</option>`).join('')}
               </select>
             </div>
-            <div class="field"><label>الخامة</label><input class="input" id="fFabric" placeholder="ساتان حريري"></div>
+            <div class="field"><label>Fabric</label><input class="input" id="fFabric" placeholder="Silk satin"></div>
           </div>
 
-          <!-- ============ عرض لفترة محدودة ============ -->
+          <!-- ============ Limited-time offer ============ -->
           <div class="field">
-            <label>عرض لفترة محدودة</label>
+            <label>Limited-time offer</label>
             <div class="offer-toggle">
-              <button type="button" class="sz is-on" data-offer="off">بدون عرض</button>
+              <button type="button" class="sz is-on" data-offer="off">No offer</button>
               <button type="button" class="sz" data-offer="on" style="gap:7px">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.6V12l3.1 1.9"/></svg>
-                عرض محدود</button>
+                Limited offer</button>
             </div>
             <div class="offer-fields hide" id="offerFields">
               <div class="admin-note" style="background:#fff">
-                هيظهر للعميل: <b>كان بـ <span id="offerPreviewOld">—</span> والآن <span id="offerPreviewNew">—</span></b>
-                + عدّاد تنازلي بالوقت المتبقي.
+                Shown to customers: <b>Was <span id="offerPreviewOld">—</span> now <span id="offerPreviewNew">—</span></b>
+                + a countdown of the time remaining.
               </div>
               <div class="form-grid">
                 <div class="field">
-                  <label>ينتهي العرض في <span class="req">*</span></label>
+                  <label>Offer ends at <span class="req">*</span></label>
                   <input class="input" id="fOfferEnds" type="datetime-local">
                 </div>
                 <div class="field">
-                  <label>عنوان العرض (اختياري)</label>
-                  <input class="input" id="fOfferLabel" placeholder="عرض العيد · آخر ٤٨ ساعة">
+                  <label>Offer label (optional)</label>
+                  <input class="input" id="fOfferLabel" placeholder="Seasonal offer · last 48 hours">
                 </div>
               </div>
-              <p class="tiny muted" style="margin:0">يجب أن يكون «السعر قبل الخصم» أكبر من السعر الحالي. بعد انتهاء الوقت يرجع العميل يشوف السعر الحالي بدون عدّاد.</p>
+              <p class="tiny muted" style="margin:0">The original price must be higher than the current price. After the offer ends, customers will see the current price without a countdown.</p>
             </div>
           </div>
 
-          <div class="field"><label>الوصف</label><textarea class="textarea" id="fDesc" placeholder="وصف هادئ ومختصر للفستان..."></textarea></div>
+          <div class="field"><label>Description</label><textarea class="textarea" id="fDesc" placeholder="A short, polished item description…"></textarea></div>
 
           <div class="field">
-            <label>المقاسات المتاحة</label>
+            <label>Available sizes</label>
             <div class="sizes-check" id="sizesBox">
               ${(CFG.DEFAULT_SIZES || []).map(s => `<button type="button" class="sz" data-size="${util.esc(s)}">${util.esc(s)}</button>`).join('')}
             </div>
-            <input class="input mt-2" id="fCustomSize" placeholder="أضيفي مقاس مخصص (Enter)">
+            <input class="input mt-2" id="fCustomSize" placeholder="Add a custom size (Enter)">
           </div>
 
           <div class="field">
-            <label>الألوان</label>
+            <label>Colors</label>
             <div class="sizes-check" id="colorsBox">
               ${(CFG.DEFAULT_COLORS || []).map(c => `
                 <button type="button" class="sz" data-color="${util.esc(c.name)}" data-hex="${util.esc(c.hex)}" style="gap:8px">
@@ -143,39 +143,39 @@
                 </button>`).join('')}
             </div>
             <div class="form-grid mt-2">
-              <input class="input" id="fColorName" placeholder="اسم لون مخصص">
+              <input class="input" id="fColorName" placeholder="Custom color name">
               <div style="display:flex;gap:8px">
                 <input class="input" id="fColorHex" type="color" value="#EFECE6" style="padding:4px;height:48px;width:64px">
-                <button class="btn btn--ghost btn--sm" id="addColor" style="height:48px">إضافة</button>
+                <button class="btn btn--ghost btn--sm" id="addColor" style="height:48px">Add</button>
               </div>
             </div>
           </div>
 
           <div class="field">
-            <label>دليل القياسات (صورة اختيارية خاصة بالمنتج)</label>
+            <label>Size guide (optional image for this item)</label>
             <div class="dropzone" id="dropGuide" style="padding:16px">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
-              <small>صورة جدول القياسات</small>
+              <small>Size chart image</small>
             </div>
             <input type="file" id="fileGuide" accept="image/*" hidden>
             <div class="preview-strip" id="previewGuide"></div>
           </div>
 
           <div class="form-grid">
-            <div class="field"><label>شارة (اختياري)</label><input class="input" id="fBadge" placeholder="جديد / آخر قطعتين"></div>
-            <div class="field"><label>ترتيب الظهور</label><input class="input" id="fSort" type="number" value="0"></div>
+            <div class="field"><label>Badge (optional)</label><input class="input" id="fBadge" placeholder="New / Limited pieces"></div>
+            <div class="field"><label>Display order</label><input class="input" id="fSort" type="number" value="0"></div>
           </div>
 
           <div class="progress hide" id="upProgress"><i></i></div>
-          <button class="btn btn--block" id="saveProduct">نشر المنتج</button>
+          <button class="btn btn--block" id="saveProduct">Publish item</button>
           <p class="tiny muted" id="adminMsg"></p>
         </div>
 
         <!-- ==================== المنتجات ==================== -->
         <div data-panel="list" class="hide">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-            <span class="tiny muted">اضغطي «تعديل» على أي منتج لتغيير صوره/سعره/عرضه</span>
-            <button class="btn btn--ghost btn--sm" id="refreshList">تحديث</button>
+            <span class="tiny muted">Select “Edit” on any item to update its photos, price, or offer</span>
+            <button class="btn btn--ghost btn--sm" id="refreshList">Refresh</button>
           </div>
           <div class="admin-list" id="adminList"><div class="skeleton" style="height:56px"></div></div>
         </div>
@@ -183,49 +183,49 @@
         <!-- ==================== الكوبونات ==================== -->
         <div data-panel="coupons" class="hide">
           <div class="admin-note">
-            الكوبون بيظهر للعميل كخانة <b class="en">COUPON / DISCOUNT</b> في السلة وصفحة الدفع.
-            اكتبي النسبة، واختاري المنتجات اللي ينطبق عليها (أو سيبيها فاضية = كل المنتجات).
+            Customers see the coupon field in the <b class="en">COUPON / DISCOUNT</b> on the bag and checkout pages.
+            Enter a percentage and choose applicable items (or leave blank to include all items).
           </div>
 
           <div class="form-grid">
             <div class="field">
-              <label>كود الخصم <span class="req">*</span></label>
+              <label>Discount code <span class="req">*</span></label>
               <input class="input en" id="cpCode" placeholder="EID2026" dir="ltr" style="text-transform:uppercase">
             </div>
             <div class="field">
-              <label>نسبة الخصم % <span class="req">*</span></label>
+              <label>Discount percentage % <span class="req">*</span></label>
               <input class="input" id="cpPercent" type="number" min="1" max="100" step="1" placeholder="15">
             </div>
             <div class="field">
-              <label>ينتهي في (اختياري)</label>
+              <label>Expires (optional)</label>
               <input class="input" id="cpEnds" type="datetime-local">
             </div>
             <div class="field">
-              <label>الحالة</label>
+              <label>Status</label>
               <select class="select-full" id="cpActive">
-                <option value="1">مُفعّل</option>
-                <option value="0">موقوف</option>
+                <option value="1">Active</option>
+                <option value="0">Paused</option>
               </select>
             </div>
           </div>
 
           <div class="field">
             <label style="display:flex;justify-content:space-between;align-items:center">
-              <span>المنتجات اللي ينطبق عليها</span>
-              <button class="btn-mini" id="cpSelectAll" type="button">تحديد/إلغاء الكل</button>
+              <span>Applies to these items</span>
+              <button class="btn-mini" id="cpSelectAll" type="button">Select/deselect all</button>
             </label>
-            <div class="coupon-products" id="cpProducts"><p class="tiny muted">جاري تحميل المنتجات...</p></div>
-            <p class="tiny muted" id="cpScopeHint">محدش متحدد = الكوبون ينطبق على كل المنتجات.</p>
+            <div class="coupon-products" id="cpProducts"><p class="tiny muted">Loading items…</p></div>
+            <p class="tiny muted" id="cpScopeHint">No items selected = coupon applies to all items.</p>
           </div>
 
-          <button class="btn btn--block" id="cpSave">حفظ الكوبون</button>
-          <button class="btn btn--ghost btn--block hide" id="cpCancelEdit">إلغاء التعديل</button>
+          <button class="btn btn--block" id="cpSave">Save coupon</button>
+          <button class="btn btn--ghost btn--block hide" id="cpCancelEdit">Cancel edit</button>
           <p class="tiny muted" id="cpMsg"></p>
 
           <hr class="rule" style="margin-block:6px">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <span class="tiny muted">الكوبونات الحالية</span>
-            <button class="btn btn--ghost btn--sm" id="cpRefresh">تحديث</button>
+            <span class="tiny muted">Current coupons</span>
+            <button class="btn btn--ghost btn--sm" id="cpRefresh">Refresh</button>
           </div>
           <div class="coupon-list" id="cpList"><div class="skeleton" style="height:64px"></div></div>
         </div>
@@ -233,8 +233,8 @@
         <!-- ==================== الطلبات ==================== -->
         <div data-panel="orders" class="hide">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-            <span class="tiny muted">آخر الطلبات المحفوظة في القاعدة</span>
-            <button class="btn btn--ghost btn--sm" id="refreshOrders">تحديث</button>
+            <span class="tiny muted">Latest orders saved in the database</span>
+            <button class="btn btn--ghost btn--sm" id="refreshOrders">Refresh</button>
           </div>
           <div class="admin-list" id="ordersList"></div>
         </div>
@@ -242,20 +242,20 @@
         <!-- ==================== الإعدادات ==================== -->
         <div data-panel="settings" class="hide" style="display:grid;gap:14px">
           <div class="admin-note">
-            <b>حالة الوضع:</b> آدمن مفعّل على هذا المتصفح.<br>
-            الحالة محفوظة في <span class="en">localStorage</span> — ما تحتاج تدخل الرمز مرة ثانية على نفس الجهاز.
+            <b>Status:</b> Admin mode is enabled in this browser.<br>
+            Status is saved in <span class="en">localStorage</span> — you will not need to enter the token again on this device.
           </div>
           <div class="field">
-            <label>الرابط السري (لا تشاركيه)</label>
+            <label>Secret link (do not share)</label>
             <div style="display:flex;gap:8px">
               <input class="input en" id="secretLink" readonly dir="ltr">
-              <button class="btn btn--ghost btn--sm" id="copySecret" style="height:48px">نسخ</button>
+              <button class="btn btn--ghost btn--sm" id="copySecret" style="height:48px">Copy</button>
             </div>
           </div>
-          <button class="btn btn--ghost btn--block" id="logoutAdmin">إلغاء وضع الآدمن من هذا المتصفح</button>
+          <button class="btn btn--ghost btn--block" id="logoutAdmin">Disable admin mode in this browser</button>
           <div class="admin-note">
-            <b>تنبيه تقني:</b> الحماية بثلاث طبقات — الرمز في الرابط، دالة الإدارة في قاعدة البيانات،
-            وسياسات RLS على الجداول والـ Storage. أي محاولة كتابة من زائر عادي بترجع مرفوضة من Supabase.
+            <b>Technical note:</b> Security has three layers: the URL token, a database admin function,
+            and RLS policies for tables and storage. Supabase rejects write attempts from regular visitors.
           </div>
         </div>
       </div>`;
@@ -293,8 +293,8 @@
     ON($('#addColor'), 'click', () => {
       const name = $('#fColorName').value.trim();
       const hex = $('#fColorHex').value;
-      if (!name) return toast('اكتبي اسم اللون');
-      if (state.colors.some(c => c.name === name)) return toast('اللون موجود بالفعل');
+      if (!name) return toast('Enter a color name.');
+      if (state.colors.some(c => c.name === name)) return toast('That color already exists.');
       state.colors.push({ name, hex });
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'sz is-on';
@@ -306,7 +306,7 @@
       $('#fColorName').value = '';
     });
 
-    /* عرض محدود */
+    /* Limited offer */
     $$('[data-offer]').forEach(b => ON(b, 'click', () => setOfferMode(b.dataset.offer === 'on')));
     ON($('#fOldPrice'), 'input', updateOfferPreview);
     ON($('#fPrice'), 'input', updateOfferPreview);
@@ -327,11 +327,11 @@
     ON($('#copySecret'), 'click', () => {
       const inp = $('#secretLink');
       inp.select();
-      navigator.clipboard?.writeText(inp.value).then(() => toast('تم نسخ الرابط', 'ok')).catch(() => {});
+      navigator.clipboard?.writeText(inp.value).then(() => toast('Link copied.', 'ok')).catch(() => {});
     });
     ON($('#logoutAdmin'), 'click', () => {
       admin.disable();
-      toast('تم إلغاء وضع الآدمن');
+      toast('Admin mode disabled.');
       setTimeout(() => location.reload(), 700);
     });
 
@@ -389,11 +389,11 @@
   }
   function renderPreviews() {
     $('#previewProducts').innerHTML = state.images.map((im, i) =>
-      `<img src="${im.url}" alt="صورة ${i + 1}" title="اضغطي للحذف" data-rm="${i}">`).join('');
+      `<img src="${im.url}" alt="Image ${i + 1}" title="Click to remove" data-rm="${i}">`).join('');
     $$('#previewProducts img').forEach(img => ON(img, 'click', () => {
       state.images.splice(+img.dataset.rm, 1); renderPreviews();
     }));
-    $('#previewGuide').innerHTML = state.guide ? `<img src="${state.guide.url}" alt="دليل القياسات">` : '';
+    $('#previewGuide').innerHTML = state.guide ? `<img src="${state.guide.url}" alt="Size guide">` : '';
     ON($('#previewGuide img'), 'click', () => { state.guide = null; renderPreviews(); });
   }
 
@@ -411,7 +411,7 @@
     else { state.colors.push({ name, hex: btn.dataset.hex }); btn.classList.add('is-on'); }
   }
 
-  /* ============================ عرض محدود ============================ */
+  /* ============================ Limited offer ============================ */
   function setOfferMode(onMode) {
     $$('[data-offer]').forEach(b => b.classList.toggle('is-on', b.dataset.offer === (onMode ? 'on' : 'off')));
     $('#offerFields').classList.toggle('hide', !onMode);
@@ -434,16 +434,16 @@
     const oldPrice = Number($('#fOldPrice').value) || null;
     const offerOn = isOfferOn();
 
-    if (!title) { msg.textContent = 'لازم اسم المنتج'; return toast('اكتبي اسم المنتج', 'warn'); }
-    if (!price) { msg.textContent = 'لازم السعر'; return toast('اكتبي السعر', 'warn'); }
-    if (!state.images.length) { msg.textContent = 'لازم صورة واحدة على الأقل'; return toast('ارفعي صورة للمنتج', 'warn'); }
+    if (!title) { msg.textContent = 'An item name is required.'; return toast('Enter an item name.', 'warn'); }
+    if (!price) { msg.textContent = 'A price is required.'; return toast('Enter a price.', 'warn'); }
+    if (!state.images.length) { msg.textContent = 'At least one image is required.'; return toast('Upload an item image.', 'warn'); }
     if (offerOn) {
-      if (!oldPrice || oldPrice <= price) { msg.textContent = '«السعر قبل الخصم» يجب أن يكون أكبر من السعر الحالي'; return toast('راجع أسعار العرض', 'warn'); }
-      if (!$('#fOfferEnds').value) { msg.textContent = 'حددي وقت انتهاء العرض'; return toast('حددي وقت انتهاء العرض', 'warn'); }
+      if (!oldPrice || oldPrice <= price) { msg.textContent = 'The original price must be higher than the current price.'; return toast('Check the offer prices.', 'warn'); }
+      if (!$('#fOfferEnds').value) { msg.textContent = 'Set the offer end time.'; return toast('Set the offer end time.', 'warn'); }
     }
 
     btn.disabled = true;
-    msg.textContent = 'جاري رفع الصور...';
+    msg.textContent = 'Uploading images…';
     $('#upProgress').classList.remove('hide');
 
     try {
@@ -461,12 +461,12 @@
 
       let guideUrl = state.guide ? (state.guide.existing ? state.guide.url : null) : null;
       if (state.guide && !state.guide.existing) {
-        msg.textContent = 'جاري رفع دليل القياسات...';
+        msg.textContent = 'Uploading size guide…';
         guideUrl = await sb.upload(CFG.BUCKET_SIZES, state.guide.file);
       }
 
       $('#upProgress i').style.width = '92%';
-      msg.textContent = state.editingId ? 'جاري حفظ التعديلات...' : 'جاري حفظ بيانات المنتج...';
+      msg.textContent = state.editingId ? 'Saving changes…' : 'Saving item…';
 
       const row = {
         title,
@@ -500,14 +500,14 @@
           const fallback = { ...row };
           delete fallback.offer_ends_at; delete fallback.offer_label;
           saved = await save(fallback);
-          toast('تم الحفظ — شغّل supabase-update-2.sql لتفعيل العروض المحدودة', 'warn');
+          toast('Saved. Run supabase-update-2.sql to enable timed offers.', 'warn');
         } else throw e1;
       }
 
-      toast(state.editingId ? 'تم حفظ تعديلات المنتج' : 'تم نشر المنتج', 'ok');
+      toast(state.editingId ? 'Item changes saved.' : 'Item published.', 'ok');
 
       $('#upProgress i').style.width = '100%';
-      msg.textContent = '✓ تم الحفظ بنجاح';
+      msg.textContent = '✓ Saved successfully';
       products.invalidate();
 
       resetForm(false);
@@ -516,19 +516,20 @@
     } catch (err) {
       console.error(err);
       msg.textContent = '✕ ' + err.message;
-      toast('فشل الحفظ: ' + err.message, 'warn');
+      toast('Save failed: ' + err.message, 'warn');
       $('#upProgress').classList.add('hide');
     } finally {
       btn.disabled = false;
     }
   }
 
-  /* ============================ تعديل منتج ============================ */
+  /* ============================ Edit item ============================ */
   async function editProduct(id) {
     try {
       let row = state.productsCache.find(p => String(p.id) === String(id));
       if (!row) row = (await sb.select(CFG.TABLE_ITEMS, `select=*&id=eq.${encodeURIComponent(id)}`))[0];
-      if (!row) return toast('المنتج غير موجود', 'warn');
+      if (!row) return toast('Item not found.', 'warn');
+      row = normalize(row);
 
       state.editingId = row.id;
       state.images = (row.images && row.images.length ? row.images : [row.image_url])
@@ -561,7 +562,7 @@
         }
       });
 
-      /* الألوان */
+      /* Colors */
       $$('#colorsBox .sz').forEach(b => {
         b.classList.toggle('is-on', state.colors.some(c => c.name === b.dataset.color));
       });
@@ -592,15 +593,15 @@
       /* الواجهة */
       $('#editBanner').classList.remove('hide');
       $('#editName').textContent = row.title || '—';
-      $('#saveProduct').textContent = 'حفظ التعديلات';
-      $('.admin-tab[data-tab="new"]').textContent = 'تعديل منتج';
+      $('#saveProduct').textContent = 'Save changes';
+      $('.admin-tab[data-tab="new"]').textContent = 'Edit item';
       renderPreviews();
       updateOfferPreview();
       switchTab('new');
       $('#adminBody').scrollTop = 0;
-      toast('المنتج محمّل للتعديل', 'ok');
+      toast('Item loaded for editing.', 'ok');
     } catch (e) {
-      toast('تعذّر تحميل المنتج: ' + e.message, 'warn');
+      toast('Could not load item: ' + e.message, 'warn');
     }
   }
 
@@ -618,10 +619,10 @@
     updateOfferPreview();
 
     $('#editBanner').classList.add('hide');
-    $('#saveProduct').textContent = 'نشر المنتج';
-    $('.admin-tab[data-tab="new"]').textContent = 'منتج جديد';
+    $('#saveProduct').textContent = 'Publish item';
+    $('.admin-tab[data-tab="new"]').textContent = 'New item';
     $('#adminMsg').textContent = '';
-    if (notify) toast('تم إلغاء التعديل');
+    if (notify) toast('Edit cancelled.');
   }
 
   /* ============================ قائمة المنتجات ============================ */
@@ -630,20 +631,20 @@
     box.innerHTML = '<div class="skeleton" style="height:56px"></div>';
     try {
       const rows = await sb.select(CFG.TABLE_ITEMS, 'select=*&order=created_at.desc');
-      state.productsCache = rows || [];
-      if (!rows?.length) { box.innerHTML = '<p class="tiny muted">لا يوجد منتجات في القاعدة بعد.</p>'; return; }
-      box.innerHTML = rows.map(r => {
+      state.productsCache = (rows || []).map(normalize);
+      if (!rows?.length) { box.innerHTML = '<p class="tiny muted">No items in the database yet.</p>'; return; }
+      box.innerHTML = state.productsCache.map(r => {
         const offerLive = r.old_price && r.offer_ends_at && new Date(r.offer_ends_at) > new Date();
         return `
         <div class="admin-row admin-row--edit" data-row="${util.esc(r.id)}">
           <img src="${util.img(r.image_url, true)}" alt="">
           <div>
             <b>${util.esc(r.title)}</b>
-            <small>${util.money(r.price)}${r.old_price ? ' · كان ' + util.money(r.old_price) : ''} · ${util.esc(r.category || 'بدون قسم')}
-              ${offerLive ? ' · <span style="color:#3F6B4F">عرض محدود</span>' : ''}</small>
+            <small>${util.money(r.price)}${r.old_price ? ' · was ' + util.money(r.old_price) : ''} · ${util.esc(r.category || 'Uncategorized')}
+              ${offerLive ? ' · <span style="color:#3F6B4F">Limited offer</span>' : ''}</small>
           </div>
           <div class="row-actions">
-            <button class="btn-mini" data-edit="${util.esc(r.id)}">تعديل</button>
+            <button class="btn-mini" data-edit="${util.esc(r.id)}">Edit</button>
             <button class="btn-mini btn-mini--danger" data-del="${util.esc(r.id)}">✕</button>
           </div>
         </div>`;
@@ -652,17 +653,17 @@
       $$('[data-edit]', box).forEach(b => ON(b, 'click', e => { e.stopPropagation(); editProduct(b.dataset.edit); }));
       $$('[data-del]', box).forEach(b => ON(b, 'click', async e => {
         e.stopPropagation();
-        if (!confirm('حذف المنتج نهائياً؟')) return;
+        if (!confirm('Permanently delete this item?')) return;
         try {
           await sb.remove(CFG.TABLE_ITEMS, b.dataset.del);
           products.invalidate();
-          toast('تم الحذف', 'ok');
+          toast('Item deleted.', 'ok');
           loadList();
-        } catch (er) { toast('فشل الحذف: ' + er.message, 'warn'); }
+        } catch (er) { toast('Delete failed: ' + er.message, 'warn'); }
       }));
       $$('[data-row]', box).forEach(r => ON(r, 'click', () => {}));
     } catch (e) {
-      box.innerHTML = `<p class="tiny muted">تعذّر جلب القائمة: ${util.esc(e.message)}</p>`;
+      box.innerHTML = `<p class="tiny muted">Could not load the list: ${util.esc(e.message)}</p>`;
     }
   }
 
@@ -672,12 +673,12 @@
   async function loadProductsIntoPicker() {
     const box = $('#cpProducts');
     if (!box) return;
-    box.innerHTML = '<p class="tiny muted">جاري تحميل المنتجات...</p>';
+    box.innerHTML = '<p class="tiny muted">Loading items…</p>';
     try {
       const rows = await sb.select(CFG.TABLE_ITEMS, 'select=*&order=created_at.desc');
-      state.productsCache = rows || [];
-      if (!rows?.length) { box.innerHTML = '<p class="tiny muted">لا يوجد منتجات — ضيفي منتجات الأول.</p>'; return; }
-      box.innerHTML = rows.map(r => `
+      state.productsCache = (rows || []).map(normalize);
+      if (!rows?.length) { box.innerHTML = '<p class="tiny muted">No items yet — add some items first.</p>'; return; }
+      box.innerHTML = state.productsCache.map(r => `
         <label class="cp-row">
           <input type="checkbox" value="${util.esc(r.id)}">
           <img src="${util.img(r.image_url, true)}" alt="">
@@ -685,7 +686,7 @@
         </label>`).join('');
       updateScopeHint();
     } catch (e) {
-      box.innerHTML = `<p class="tiny muted">تعذّر تحميل المنتجات: ${util.esc(e.message)}</p>`;
+      box.innerHTML = `<p class="tiny muted">Could not load items: ${util.esc(e.message)}</p>`;
     }
   }
 
@@ -695,8 +696,8 @@
   function updateScopeHint() {
     const n = selectedCouponProducts().length;
     $('#cpScopeHint').textContent = n
-      ? `الكوبون ينطبق على ${n} منتج مختار.`
-      : 'محدش متحدد = الكوبون ينطبق على كل المنتجات.';
+      ? `Coupon applies to ${n} selected item(s).`
+      : 'No items selected = coupon applies to all items.';
   }
   function toggleAllCouponProducts() {
     const boxes = $$('#cpProducts input');
@@ -709,7 +710,7 @@
     ['#cpCode', '#cpPercent', '#cpEnds'].forEach(s => $(s).value = '');
     $('#cpActive').value = '1';
     $$('#cpProducts input').forEach(b => b.checked = false);
-    $('#cpSave').textContent = 'حفظ الكوبون';
+    $('#cpSave').textContent = 'Save coupon';
     $('#cpCancelEdit').classList.add('hide');
     $('#cpMsg').textContent = '';
     updateScopeHint();
@@ -723,32 +724,32 @@
     const ends = $('#cpEnds').value ? new Date($('#cpEnds').value).toISOString() : null;
     const productIds = selectedCouponProducts();
 
-    if (!code) { msg.textContent = 'اكتبي كود الكوبون'; return toast('اكتبي الكود', 'warn'); }
-    if (!percent || percent <= 0 || percent > 100) { msg.textContent = 'النسبة لازم بين 1 و 100'; return toast('نسبة غير صحيحة', 'warn'); }
+    if (!code) { msg.textContent = 'Enter a coupon code.'; return toast('Enter a code.', 'warn'); }
+    if (!percent || percent <= 0 || percent > 100) { msg.textContent = 'Percentage must be between 1 and 100.'; return toast('Invalid percentage.', 'warn'); }
 
     const btn = $('#cpSave');
     btn.disabled = true;
-    msg.textContent = 'جاري الحفظ...';
+    msg.textContent = 'Saving…';
     try {
       const row = { code, percent, product_ids: productIds, active, ends_at: ends };
       if (editingCouponId) {
         await sb.update(CFG.TABLE_COUPONS, editingCouponId, row);
-        toast('تم تعديل الكوبون', 'ok');
+        toast('Coupon updated.', 'ok');
       } else {
         await sb.insert(CFG.TABLE_COUPONS, row);
-        toast('تم إضافة الكوبون', 'ok');
+        toast('Coupon added.', 'ok');
       }
-      msg.textContent = '✓ تم الحفظ';
+      msg.textContent = '✓ Saved';
       resetCouponForm();
       loadCoupons();
     } catch (e) {
       const m = /duplicate|unique/i.test(e.message)
-        ? 'الكود ده مستخدم بالفعل — اختاري كود تاني'
+        ? 'This code is already in use — choose another.'
         : /coupons/i.test(e.message)
-          ? 'شغّل supabase-update-2.sql الأول لتفعيل الكوبونات'
+          ? 'Run supabase-update-2.sql first to enable coupons.'
           : e.message;
       msg.textContent = '✕ ' + m;
-      toast('فشل: ' + m, 'warn');
+      toast('Failed: ' + m, 'warn');
     } finally {
       btn.disabled = false;
     }
@@ -763,27 +764,27 @@
       state.couponsCache = rows || [];
       $('#couponsCnt').textContent = (rows || []).filter(r => r.active).length;
 
-      if (!rows?.length) { box.innerHTML = '<p class="tiny muted">لا يوجد كوبونات بعد.</p>'; return; }
+      if (!rows?.length) { box.innerHTML = '<p class="tiny muted">No coupons yet.</p>'; return; }
 
       box.innerHTML = rows.map(c => {
         const expired = c.ends_at && new Date(c.ends_at) < new Date();
         const scope = (c.product_ids && c.product_ids.length)
-          ? `${c.product_ids.length} منتج`
-          : 'كل المنتجات';
+          ? `${c.product_ids.length} item(s)`
+          : 'All items';
         return `
         <div class="coupon-card ${(!c.active || expired) ? 'is-off' : ''}">
           <div>
             <div class="cc-code">${util.esc(c.code)}
-              ${!c.active ? '<span class="badge" style="font-size:10px">موقوف</span>' : ''}
-              ${expired ? '<span class="badge" style="font-size:10px">منتهي</span>' : ''}
+              ${!c.active ? '<span class="badge" style="font-size:10px">Paused</span>' : ''}
+              ${expired ? '<span class="badge" style="font-size:10px">Expired</span>' : ''}
             </div>
             <div class="cc-meta">
-              ${scope}${c.ends_at ? ' · ينتهي ' + new Date(c.ends_at).toLocaleDateString('ar-EG') : ' · بدون نهاية'}
+              ${scope}${c.ends_at ? ' · Expires ' + new Date(c.ends_at).toLocaleDateString('en-GB') : ' · No expiry'}
             </div>
             <div class="row-actions" style="margin-top:8px">
-              <button class="btn-mini" data-cp-edit="${util.esc(c.id)}">تعديل</button>
-              <button class="btn-mini" data-cp-toggle="${util.esc(c.id)}">${c.active ? 'إيقاف' : 'تفعيل'}</button>
-              <button class="btn-mini btn-mini--danger" data-cp-del="${util.esc(c.id)}">حذف</button>
+              <button class="btn-mini" data-cp-edit="${util.esc(c.id)}">Edit</button>
+              <button class="btn-mini" data-cp-toggle="${util.esc(c.id)}">${c.active ? 'Pause' : 'Activate'}</button>
+              <button class="btn-mini btn-mini--danger" data-cp-del="${util.esc(c.id)}">Delete</button>
             </div>
           </div>
           <div class="cc-pct">${Number(c.percent)}%</div>
@@ -800,9 +801,9 @@
         $('#cpEnds').value = c.ends_at ? c.ends_at.slice(0, 16) : '';
         $$('#cpProducts input').forEach(i => { i.checked = (c.product_ids || []).includes(i.value); });
         updateScopeHint();
-        $('#cpSave').textContent = 'حفظ التعديلات';
+        $('#cpSave').textContent = 'Save changes';
         $('#cpCancelEdit').classList.remove('hide');
-        toast('الكوبون محمّل للتعديل');
+        toast('Coupon loaded for editing.');
         $('#adminBody').scrollTop = 0;
       }));
 
@@ -812,23 +813,23 @@
         try {
           await sb.update(CFG.TABLE_COUPONS, c.id, { active: !c.active });
           loadCoupons();
-          toast(!c.active ? 'تم تفعيل الكوبون' : 'تم إيقاف الكوبون');
-        } catch (e) { toast('فشل: ' + e.message, 'warn'); }
+          toast(!c.active ? 'Coupon activated.' : 'Coupon paused.');
+        } catch (e) { toast('Failed: ' + e.message, 'warn'); }
       }));
 
       $$('[data-cp-del]', box).forEach(b => ON(b, 'click', async () => {
-        if (!confirm('حذف الكوبون؟')) return;
+        if (!confirm('Delete this coupon?')) return;
         try {
           await sb.remove(CFG.TABLE_COUPONS, b.dataset.cpDel);
           loadCoupons();
-          toast('تم حذف الكوبون', 'ok');
-        } catch (e) { toast('فشل: ' + e.message, 'warn'); }
+          toast('Coupon deleted.', 'ok');
+        } catch (e) { toast('Failed: ' + e.message, 'warn'); }
       }));
     } catch (e) {
       const missing = /coupons/i.test(e.message);
       box.innerHTML = `<p class="tiny muted">${missing
-        ? 'نظام الكوبونات غير مفعّل بعد — شغّل ملف <b class="en">supabase-update-2.sql</b> في SQL Editor وتشتغل هذه الخانة فوراً.'
-        : 'تعذّر جلب الكوبونات: ' + util.esc(e.message)}</p>`;
+        ? 'Coupons are not enabled yet — run <b class="en">supabase-update-2.sql</b> in the SQL Editor to enable this section.'
+        : 'Could not load coupons: ' + util.esc(e.message)}</p>`;
     }
   }
 
@@ -838,17 +839,17 @@
     box.innerHTML = '<div class="skeleton" style="height:56px"></div>';
     try {
       const rows = await sb.select(CFG.TABLE_ORDERS, 'select=*&order=created_at.desc&limit=30');
-      if (!rows?.length) { box.innerHTML = '<p class="tiny muted">لا يوجد طلبات محفوظة.</p>'; return; }
+      if (!rows?.length) { box.innerHTML = '<p class="tiny muted">No saved orders yet.</p>'; return; }
       box.innerHTML = rows.map(o => `
         <div class="admin-row" style="grid-template-columns:1fr auto">
           <div>
             <b>${util.esc(o.customer_name)} · ${util.esc(o.phone)}</b>
-            <small>${util.esc(o.code || '')} — ${util.money(o.total)}${o.coupon_code ? ' · كوبون ' + util.esc(o.coupon_code) : ''} — ${util.esc(o.payment_method || '')}</small>
+            <small>${util.esc(o.code || '')} — ${util.money(o.total)}${o.coupon_code ? ' · Coupon ' + util.esc(o.coupon_code) : ''} — ${util.esc(englishField(o.payment_method, ''))}</small>
           </div>
           <small class="muted">${new Date(o.created_at).toLocaleDateString('ar-EG')}</small>
         </div>`).join('');
     } catch (e) {
-      box.innerHTML = `<p class="tiny muted">تعذّر جلب الطلبات: ${util.esc(e.message)}</p>`;
+      box.innerHTML = `<p class="tiny muted">Could not load orders: ${util.esc(e.message)}</p>`;
     }
   }
 })();
