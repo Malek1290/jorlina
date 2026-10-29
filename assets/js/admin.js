@@ -28,10 +28,14 @@
     couponsCache: []
   };
 
-  document.addEventListener('DOMContentLoaded', () => {
+  const bootAdmin = () => {
+    if (window.__JL_ADMIN_READY) return;
     injectUI();
     document.addEventListener('jl:open-admin', openSheet);
-  });
+    window.__JL_ADMIN_READY = true;
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootAdmin, { once: true });
+  else bootAdmin();
 
   /* ============================ الواجهة ============================ */
   function injectUI() {
