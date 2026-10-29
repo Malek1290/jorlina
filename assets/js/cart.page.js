@@ -8,7 +8,7 @@ function rowHTML(i) {
   return `
     <div class="cart-item" data-key="${util.esc(key)}">
       <a class="cart-item-media" href="product.html?id=${encodeURIComponent(i.id)}">
-        <img src="${util.img(i.image || i.image_url, true)}" alt="${util.esc(i.title)}">
+        <img src="${util.img(i.image || i.image_url, true)}" alt="${util.esc(i.title)}" width="480" height="600" loading="lazy" decoding="async">
       </a>
       <div class="cart-item-body">
         <a class="cart-item-title" href="product.html?id=${encodeURIComponent(i.id)}">${util.esc(i.title)}
@@ -69,9 +69,7 @@ function render() {
     });
   });
 
-  if (window.gsap && items.length && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    gsap.fromTo('.cart-item', { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: .5, stagger: .05, ease: 'power2.out' });
-  }
+  window.JL.revealWithin(list);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

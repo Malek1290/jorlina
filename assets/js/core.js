@@ -35,11 +35,11 @@
     },
     params() { return new URLSearchParams(location.search); },
     img(url, small) {
-      if (!url) return 'assets/img/p1.jpg';
-      if (!small) return url;
-      // صور محلية: نستخدم نسخة مصغرة تلقائياً
-      if (/^assets\/img\/[^/]+\.jpg$/.test(url)) return url.replace('assets/img/', 'assets/img/thumbs/');
-      return url;
+      if (!url) url = 'assets/img/p1.jpg';
+      if (!/^assets\/img\/[^/]+\.jpg$/i.test(url)) return url;
+      // Serve responsive WebP derivatives for local catalog images; remote uploads are untouched.
+      const local = small ? url.replace('assets/img/', 'assets/img/thumbs/') : url;
+      return local.replace(/\.jpg$/i, '.webp');
     }
   };
 
@@ -519,7 +519,7 @@
     const tryFinish = () => {
       if (!assetsReady || finishScheduled || done) return;
       finishScheduled = true;
-      const minDuration = 1300;
+      const minDuration = 1050;
       setTimeout(finish, Math.max(0, minDuration - (Date.now() - started)));
     };
     const markReady = () => {
@@ -533,7 +533,7 @@
       node.style.visibility = 'visible';
     });
 
-    const heroImg = document.querySelector('.hero-media img');
+    const heroImg = document.querySelector('.hero-background img');
     if (heroImg && !heroImg.complete) {
       ON(heroImg, 'load', markReady, { once: true });
       ON(heroImg, 'error', markReady, { once: true });
@@ -549,33 +549,38 @@
     return finished;
   }
 
-  /* ---------- Scroll reveal ---------- */
+  /* ---------- Native, low-cost scroll reveal ---------- */
   let revealed = false;
-  function revealInit() {
-    if (revealed) return; revealed = true;
-    const els = $$('.reveal, .reveal-lines');
+  let revealObserver = null;
+  function revealWithin(scope = document) {
+    const selector = '.reveal, .reveal-lines';
+    const els = scope.matches?.(selector) ? [scope, ...$$(selector, scope)] : $$(selector, scope);
     if (!els.length) return;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (window.gsap && window.ScrollTrigger && !reduced) {
-      gsap.registerPlugin(ScrollTrigger);
-      els.forEach(el => {
-        if (el.classList.contains('reveal')) {
-          gsap.fromTo(el, { y: 26, opacity: 0 }, {
-            y: 0, opacity: 1, duration: 1.05, ease: 'power3.out',
-            scrollTrigger: { trigger: el, start: 'top 88%' },
-            delay: parseFloat(el.dataset.delay || 0)
-          });
-        } else {
-          const lines = el.querySelectorAll('span > i');
-          gsap.fromTo(lines, { yPercent: 112 }, {
-            yPercent: 0, duration: 1.2, ease: 'expo.out', stagger: .09,
-            scrollTrigger: { trigger: el, start: 'top 90%' }
-          });
-        }
-      });
-    } else {
-      els.forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+    if (reduced || !('IntersectionObserver' in window)) {
+      els.forEach(el => el.classList.add('is-visible'));
+      return;
     }
+    if (!revealObserver) {
+      revealObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target;
+          const delay = Math.max(0, Math.min(parseFloat(el.dataset.delay || 0), .5));
+          el.style.setProperty('--reveal-delay', `${delay}s`);
+          el.classList.add('is-visible');
+          revealObserver.unobserve(el);
+        });
+      }, { threshold: .08, rootMargin: '0px 0px -32px 0px' });
+    }
+    els.forEach(el => {
+      if (!el.classList.contains('is-visible')) revealObserver.observe(el);
+    });
+  }
+  function revealInit() {
+    if (revealed) return;
+    revealed = true;
+    revealWithin(document);
   }
 
   /* ==========================================================
@@ -909,8 +914,8 @@
     return `
     <article class="card reveal" data-delay="${(i % 4) * 0.06}" data-id="${util.esc(p.id)}">
       <a href="product.html?id=${encodeURIComponent(p.id)}" class="card-media" aria-label="${util.esc(p.title)}">
-        <img class="card-image-primary" src="${util.img(p.image_url, true)}" alt="${util.esc(p.title)}" loading="lazy">
-        ${alternate ? `<img class="card-image-alt" src="${util.img(alternate, true)}" alt="" loading="lazy" aria-hidden="true">` : ''}
+        <img class="card-image-primary" src="${util.img(p.image_url, true)}" alt="${util.esc(p.title)}" width="480" height="600" loading="lazy" decoding="async">
+        ${alternate ? `<img class="card-image-alt" src="${util.img(alternate, true)}" alt="" width="480" height="600" loading="lazy" decoding="async" aria-hidden="true">` : ''}
         <span class="card-badges">${labelBadge}${saleBadge}</span>
         ${timedBadge ? `<span class="card-timed-badge">${timedBadge}</span>` : ''}
       </a>
@@ -1104,7 +1109,22 @@
   /* ==========================================================
      9) التشغيل
      ========================================================== */
-  // التحقق من رمز الآدمن فوراً (قبل تحميل بقية الملفات)
+  let adminToolsPromise = null;
+  function loadAdminTools() {
+    if (window.__JL_ADMIN_READY) return Promise.resolve();
+    if (adminToolsPromise) return adminToolsPromise;
+    adminToolsPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'assets/js/admin.js';
+      script.onload = () => resolve();
+      script.onerror = () => { adminToolsPromise = null; reject(new Error('Admin tools failed to load.')); };
+      document.head.appendChild(script);
+    });
+    return adminToolsPromise;
+  }
+
+  document.documentElement.classList.add('js-reveal');
+  // Validate an admin link before DOM ready so the tools can boot on any page.
   admin.handleUrl();
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -1113,11 +1133,22 @@
     guidesModal();
     initAccordions();
     document.documentElement.classList.add('is-ready');
+    if (!$('#jl-loader')) revealInit();
 
-    // زر الآدمن السريع (لو مفعّل)
-    ON($('#quickAdmin'), 'click', () => document.dispatchEvent(new CustomEvent('jl:open-admin')));
+    // Load the admin bundle only in an authenticated browser, from any page.
+    if (admin.isAdmin()) loadAdminTools().catch(err => toast(err.message, 'warn'));
+    const openAdmin = () => {
+      if (!admin.isAdmin()) {
+        location.href = `index.html?admin=${encodeURIComponent(CFG.ADMIN_TOKEN)}`;
+        return;
+      }
+      loadAdminTools()
+        .then(() => document.dispatchEvent(new CustomEvent('jl:open-admin')))
+        .catch(err => toast(err.message, 'warn'));
+    };
+    ON($('#quickAdmin'), 'click', openAdmin);
     ON($('#adminDot'), 'click', () => {
-      if (admin.isAdmin()) document.dispatchEvent(new CustomEvent('jl:open-admin'));
+      if (admin.isAdmin()) openAdmin();
       else toast('Admin mode is not enabled in this browser.');
     });
   });
@@ -1134,5 +1165,5 @@
      التصدير
      ========================================================== */
   window.JL = { CFG, $, $$, ON, util, sb, admin, cart, products, coupons, offer, cardHTML, initCountdowns, normalize, englishField,
-    couponBoxHTML, bindCouponBox, modal, toast, loader, waLink, buildOrderMessage, initAccordions, icons, logoSVG };
+    couponBoxHTML, bindCouponBox, modal, toast, loader, waLink, buildOrderMessage, initAccordions, revealWithin, icons, logoSVG };
 })();

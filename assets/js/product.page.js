@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const stage = $('#stage');
   const images = p.images?.length ? p.images : [p.image_url];
   stage.insertAdjacentHTML('afterbegin', images.map((src, i) =>
-    `<img src="${util.img(src)}" alt="${util.esc(p.title)} — Image ${i + 1}" class="${i === 0 ? 'is-on' : ''}" data-i="${i}">`).join(''));
+    `<img src="${util.img(src)}" alt="${util.esc(p.title)} — Image ${i + 1}" class="${i === 0 ? 'is-on' : ''}" data-i="${i}" loading="${i === 0 ? 'eager' : 'lazy'}" fetchpriority="${i === 0 ? 'high' : 'auto'}" decoding="async">`).join(''));
   stage.querySelector('.skeleton')?.remove();
 
   $('#thumbs').innerHTML = images.map((src, i) =>
@@ -196,17 +196,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     .sort((a, b) => (a.category === p.category ? -1 : 0) - (b.category === p.category ? -1 : 0))
     .slice(0, 4);
   $('#relatedGrid').innerHTML = related.map(miniCard).join('');
-  $$('#relatedGrid .card').forEach(c => c.classList.add('is-ready'));
+  window.JL.revealWithin($('#relatedGrid'));
 
-  /* GSAP دخول */
-  if (window.gsap && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    gsap.fromTo('.gallery', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 1, ease: 'power3.out' });
-    gsap.fromTo('#pdp .pdp-info > *', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: .9, ease: 'power3.out', stagger: .06, delay: .08 });
-  }
+  $('.gallery')?.classList.add('reveal');
+  $$('#pdp .pdp-info > *').forEach((element, index) => {
+    element.classList.add('reveal');
+    element.dataset.delay = String(Math.min(index * .045, .25));
+  });
+  window.JL.revealWithin($('#pdp'));
 });
 
 function bumpCart() {
-  const n = document.querySelector('.cart-count');
-  if (!n || !window.gsap) return;
-  gsap.fromTo(n, { scale: 1 }, { scale: 1.45, duration: .18, yoyo: true, repeat: 1, ease: 'power2.out' });
+  const badge = document.querySelector('.cart-count');
+  if (!badge || !badge.animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  badge.animate(
+    [{ transform: 'scale(1)' }, { transform: 'scale(1.35)' }, { transform: 'scale(1)' }],
+    { duration: 300, easing: 'cubic-bezier(.2,.8,.2,1)' }
+  );
 }

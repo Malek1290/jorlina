@@ -10,7 +10,7 @@
 
 ```
 jorlina/
-├─ index.html            ← الصفحة الرئيسية + شاشة التحميل (لوجو + بار متكرر)
+├─ index.html            ← الصفحة الرئيسية + Hero photo + شاشة تحميل متحركة باللوجو
 ├─ shop.html             ← المتجر (فلاتر أقسام + ترتيب)
 ├─ product.html          ← صفحة المنتج (جاليري موحّد + ثامبنيل + مقاس/لون + دليل قياسات)
 ├─ cart.html             ← السلة
@@ -19,16 +19,16 @@ jorlina/
 │
 ├─ assets/
 │  ├─ css/main.css       ← ألوان CLOTHINA البنية والبيضاء
-│  ├─ css/fonts.css      ← الخطوط محلية (Zain عربي + Cormorant Garamond إنجليزي)
-│  ├─ fonts/             ← ملفات woff2 (بتشتغل أوفلاين)
-│  ├─ img/               ← صور الديمو + نسخ thumbs مصغّرة
-│  ├─ vendor/            ← GSAP · ScrollTrigger · Three.js (محليين، بدون CDN)
+│  ├─ css/fonts.css      ← ملفات تعريف خطوط احتياطية (غير محمّلة في الواجهة السريعة)
+│  ├─ fonts/             ← ملفات woff2 محفوظة للاستخدام الاختياري
+│  ├─ img/               ← صور WebP محسّنة + ملفات JPEG احتياطية
+│  ├─ vendor/            ← مكتبات حركة قديمة محفوظة، وغير مطلوبة لتشغيل المتجر
 │  └─ js/
 │     ├─ config.js       ← 🔴 كل الإعدادات: المفاتيح · رقم واتساب · الرمز السري
 │     ├─ env.js          ← تجاوزات محلية (يشبه .env) اختياري
-│     ├─ silk.js         ← تموّج الحرير (Three.js Shader) في التحميل والهيرو
-│     ├─ core.js         ← عميل Supabase · الآدمن · السلة · الهيدر/الفوتر · رسالة واتساب
-│     ├─ admin.js        ← لوحة التحكم المخفية (رفع صور + منتجات + طلبات)
+│     ├─ silk.js         ← مؤثر Three.js قديم غير محمّل
+│     ├─ core.js         ← Supabase · الآدمن المحمّل عند الحاجة · السلة · الهيدر/الفوتر
+│     ├─ admin.js        ← لوحة التحكم المخفية (تُحمّل فقط في وضع الآدمن)
 │     └─ *.page.js       ← كود كل صفحة
 ```
 
@@ -40,7 +40,7 @@ jorlina/
    - Buckets: `products` · `size-guides` · `measurements` (Public Read)
    - سياسات RLS: **القراءة عامة** · **الكتابة للآدمن فقط**
 2. (موصى به) **Authentication → Sign In / Providers → Email → Disable sign-ups** عشان محدش يقدر يعمل مستخدمين وهميين.
-3. ارفع ملفات المشروع على أي هوست ثابت (Netlify / Vercel / GitHub Pages / cPanel).
+3. ارفع ملفات المشروع على أي هوست ثابت (Netlify / Vercel / GitHub Pages / cPanel). ملفات `_headers` و`.htaccess` تضبط كاش الصور والملفات الثابتة على Netlify/Cloudflare Pages وApache/cPanel؛ اضبط Cache-Control بنفس السياسة إذا كان الهوست مختلفًا.
    مهم: Supabase Public URL بيشتغل من أي دومين (CORS مفتوح ✅ — تم اختباره).
 4. افتح: `https://your-site.com/index.html?admin=malik_secure_2026`
    - أول مرة بس: الرمز بيتحقق، الحالة بتتحفظ في `localStorage`، **والرمز بيتمسح من شريط العنوان** تلقائياً.

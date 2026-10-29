@@ -65,11 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
       grid.innerHTML = rows.map((product, index) => cardHTML(product, index)).join('');
       window.JL.initCountdowns();
-      if (window.gsap && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        gsap.fromTo('#shopGrid .card', { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: .55, ease: 'power3.out', stagger: .045 });
-      } else {
-        $$('#shopGrid .card').forEach(card => { card.style.opacity = 1; card.style.transform = 'none'; });
-      }
+      window.JL.revealWithin(grid);
     }
     countEl.textContent = `${rows.length} ${rows.length === 1 ? 'piece' : 'pieces'}`;
   }
