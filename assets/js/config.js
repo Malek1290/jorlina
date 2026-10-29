@@ -55,7 +55,7 @@ window.JL_CONFIG = {
     { name: "Olive", hex: "#8A8C7F" },
     { name: "Black", hex: "#1A1A1A" }
   ],
-  CATEGORIES: ["Eveningwear", "Bridal", "Casualwear", "Abayas", "Looks", "Hoodies", "Trousers", "Sets"],
+  CATEGORIES: ["Oversized", "Hoodies", "Graphic Tees", "Denim", "Casualwear", "Trousers", "Sets", "Eveningwear", "Bridal", "Abayas", "Looks"],
   PAYMENT_METHODS: [
     {
       id: "vodafone_cash",

@@ -617,8 +617,8 @@
     const page = document.body.dataset.page || 'home';
     const header = `
       <div class="announce">
-        <span>${util.esc(CFG.FREE_SHIPPING_NOTE)} · Made to measure · Delivery across Egypt</span>
-        <span class="en" style="margin-inline-start:14px">CLOTHINA ATELIER</span>
+        <span>Fresh drops · ${util.esc(CFG.FREE_SHIPPING_NOTE)}</span>
+        <span class="en" style="margin-inline-start:14px">CLOTHINA STREETWEAR</span>
       </div>
       <header class="site-header" id="siteHeader">
         <div class="container header-inner">
@@ -629,14 +629,14 @@
             <a href="index.html" class="${page === 'home' ? 'is-active' : ''}">Home</a>
             <a href="shop.html" class="${page === 'shop' ? 'is-active' : ''}">Shop</a>
             <a href="index.html#collections">Collections</a>
-            <a href="index.html#story">Our atelier</a>
+            <a href="index.html#story">About CLOTHINA</a>
             <a href="index.html#contact">Contact</a>
           </nav>
           <div class="header-actions">
             <button class="icon-btn burger" id="burgerBtn" aria-label="Menu">${icons.menu}</button>
-                     <a class="icon-btn" href="cart.html" aria-label="Shopping bag">
+                     <button class="icon-btn" type="button" id="cartDrawerOpen" aria-label="Open shopping bag" aria-controls="cartDrawer" aria-expanded="false">
               ${icons.cart}<span class="cart-count">0</span>
-            </a>
+            </button>
           </div>
         </div>
       </header>
@@ -645,7 +645,7 @@
         <a href="index.html">Home</a>
         <a href="shop.html">Shop</a>
         <a href="index.html#collections">Collections</a>
-        <a href="index.html#story">Our atelier</a>
+        <a href="index.html#story">About CLOTHINA</a>
         <a href="cart.html">Shopping bag</a>
         <a href="index.html#contact">Contact</a>
       </div>`;
@@ -658,7 +658,7 @@
               <div class="brand">
                 <img class="brand-logo" src="${LOGO_WORD_LIGHT}" alt="CLOTHINA" width="590" height="70">
               </div>
-              <p>A Cairo fashion label focused on considered details, selected fabrics, comfortable cuts, and pieces to wear for years.</p>
+              <p>Everyday streetwear, easy layers, oversized fits, and comfortable essentials made for life in Cairo.</p>
             </div>
             <div>
               <h4>Shop</h4>
@@ -687,7 +687,7 @@
             </div>
           </div>
           <div class="footer-bottom">
-            <span class="en">© ${new Date().getFullYear()} CLOTHINA ATELIER — QUIET LUXURY</span>
+            <span class="en">© ${new Date().getFullYear()} CLOTHINA — STREETWEAR FOR EVERY DAY</span>
             <span>Made with care <i class="admin-dot" id="adminDot" title="·"></i></span>
           </div>
         </div>
@@ -697,6 +697,7 @@
     if (hHost) hHost.innerHTML = header;
     const fHost = document.getElementById('site-footer');
     if (fHost) fHost.innerHTML = footer;
+    initCartDrawer();
 
     // burger
     ON($('#burgerBtn'), 'click', () => $('#mobileNav')?.classList.add('is-open'));
@@ -882,60 +883,172 @@
     const st = offer.state(p);
     const off = offer.pct(p);
     const endsAt = offer.endsAt(p);
-
-    const offerBadge = st === 'live'
-      ? `<span class="badge badge--sale">-${off}%</span>`
+    const badgeText = String(p.badge || '').trim().toLowerCase();
+    const saleBadge = st === 'live'
+      ? `<span class="badge badge--sale">SALE -${off}%</span>`
       : '';
-
+    const labelBadge = /^(new|new arrival|just dropped)$/.test(badgeText)
+      ? '<span class="badge badge--new">NEW</span>'
+      : /best\s*seller|bestseller|top seller/.test(badgeText)
+        ? '<span class="badge badge--best">BEST SELLER</span>'
+        : '';
     const timedBadge = (st === 'live' && endsAt)
       ? `<span class="card-old-badge"><span class="dot-live" style="width:5px;height:5px;border-radius:50%;background:var(--color-success);display:inline-block"></span>Limited-time offer <span class="cd" data-offer-end="${endsAt.toISOString()}"></span></span>`
       : '';
-
     const priceHTML = st === 'live'
-      ? `<span class="card-price">${util.money(p.price)}</span>
-         <span class="card-price-old">${util.money(p.old_price)}</span>`
+      ? `<span class="card-price">${util.money(p.price)}</span><span class="card-price-old">${util.money(p.old_price)}</span>`
       : `<span class="card-price">${util.money(p.price)}</span>`;
-
-    const quickBtn = opts.quick
-      ? `<button class="card-quick" data-quick="${util.esc(p.id)}">Quick view <span class="en">+</span></button>`
-      : '';
+    const images = (p.images || []).filter(Boolean);
+    const alternate = images.find(src => src !== p.image_url) || '';
+    const quickBtns = opts.quick === false ? '' : `
+      <div class="card-actions">
+        <button class="card-quick" type="button" data-quick="${util.esc(p.id)}">Quick add <span aria-hidden="true">+</span></button>
+        <button class="card-view" type="button" data-quick-view="${util.esc(p.id)}" aria-label="Quick view ${util.esc(p.title)}">View</button>
+      </div>`;
 
     return `
     <article class="card reveal" data-delay="${(i % 4) * 0.06}" data-id="${util.esc(p.id)}">
       <a href="product.html?id=${encodeURIComponent(p.id)}" class="card-media" aria-label="${util.esc(p.title)}">
-        <img src="${util.img(p.image_url, true)}" alt="${util.esc(p.title)}" loading="lazy">
-        <span class="card-badges">
-          ${p.badge ? `<span class="badge">${util.esc(p.badge)}</span>` : ''}
-          ${offerBadge}
-        </span>
-        ${timedBadge ? `<span style="position:absolute;bottom:12px;inset-inline-start:12px;z-index:2">${timedBadge}</span>` : ''}
+        <img class="card-image-primary" src="${util.img(p.image_url, true)}" alt="${util.esc(p.title)}" loading="lazy">
+        ${alternate ? `<img class="card-image-alt" src="${util.img(alternate, true)}" alt="" loading="lazy" aria-hidden="true">` : ''}
+        <span class="card-badges">${labelBadge}${saleBadge}</span>
+        ${timedBadge ? `<span class="card-timed-badge">${timedBadge}</span>` : ''}
       </a>
-      ${quickBtn}
+      ${quickBtns}
       <div class="card-body">
-        <a class="card-title" href="product.html?id=${encodeURIComponent(p.id)}">${util.esc(p.title)}${
-          p.title_en ? ` <span class="en muted" style="font-size:12px;letter-spacing:.16em">${util.esc(p.title_en)}</span>` : ''}</a>
+        <a class="card-title" href="product.html?id=${encodeURIComponent(p.id)}">${util.esc(p.title)}${p.title_en ? ` <span class="en muted card-title-en">${util.esc(p.title_en)}</span>` : ''}</a>
         <div class="card-meta">${priceHTML}</div>
-        ${st === 'live' ? `<span class="price-was">Was <s>${util.money(p.old_price)}</s> now ${util.money(p.price)}</span>` : ''}
         ${p.category ? `<span class="card-fabric">${util.esc(p.category)}${p.fabric ? ' · ' + util.esc(p.fabric) : ''}</span>` : ''}
       </div>
     </article>`;
   }
 
-  /* عدّاد تنازلي لكل العناصر اللي عندها data-offer-end */
+  function openQuickView(p) {
+    const id = 'quickModal';
+    let m = document.getElementById(id);
+    if (!m) {
+      m = document.createElement('div');
+      m.className = 'modal'; m.id = id;
+      document.body.appendChild(m);
+      ON(m, 'click', e => { if (e.target === m) modal.close(m); });
+    }
+    const sizes = (p.sizes || []).map((size, i) => `<button class="opt-btn ${i === 0 ? 'is-on' : ''}" type="button" data-q-size="${util.esc(size)}">${util.esc(size)}</button>`).join('');
+    const colors = (p.colors || []).map((color, i) => `<button class="swatch ${i === 0 ? 'is-on' : ''}" type="button" data-q-color="${util.esc(color.name)}" title="${util.esc(color.name)}"><i style="background:${util.esc(color.hex || '#EFECE6')}"></i></button>`).join('');
+    const sale = offer.state(p) === 'live';
+    m.innerHTML = `
+      <div class="modal-card quick-card">
+        <div class="modal-head"><div><span class="eyebrow">QUICK VIEW</span><h3>${util.esc(p.title)}</h3></div><button class="modal-close" type="button" data-close aria-label="Close">✕</button></div>
+        <div class="quick-grid">
+          <div class="quick-image"><img src="${util.img(p.image_url)}" alt="${util.esc(p.title)}"></div>
+          <div class="quick-info">
+            <div class="card-meta"><span class="card-price">${util.money(p.price)}</span>${sale ? `<span class="card-price-old">${util.money(p.old_price)}</span><span class="badge badge--sale">SALE -${offer.pct(p)}%</span>` : ''}</div>
+            <p class="tiny muted">${util.esc((p.description || '').slice(0, 150))}</p>
+            ${sizes ? `<div class="opt"><span class="opt-label">Choose size</span><div class="opt-grid">${sizes}</div></div>` : ''}
+            ${colors ? `<div class="opt"><span class="opt-label">Color</span><div class="opt-grid">${colors}</div></div>` : ''}
+            <button class="btn btn--block" type="button" id="quickAdd">Add to bag</button>
+            <a class="link-u" href="product.html?id=${encodeURIComponent(p.id)}">Full details <span class="en">→</span></a>
+          </div>
+        </div>
+      </div>`;
+    modal.open(id);
+    ON(m.querySelector('[data-close]'), 'click', () => modal.close(m));
+    m.querySelectorAll('[data-q-size]').forEach(b => ON(b, 'click', () => {
+      m.querySelectorAll('[data-q-size]').forEach(x => x.classList.toggle('is-on', x === b));
+    }));
+    m.querySelectorAll('[data-q-color]').forEach(b => ON(b, 'click', () => {
+      m.querySelectorAll('[data-q-color]').forEach(x => x.classList.toggle('is-on', x === b));
+    }));
+    ON(m.querySelector('#quickAdd'), 'click', () => {
+      const size = m.querySelector('[data-q-size].is-on')?.dataset.qSize || '';
+      const color = m.querySelector('[data-q-color].is-on')?.dataset.qColor || '';
+      if (sizes && !size) return toast('Please choose a size first.', 'warn');
+      cart.add({ id: p.id, title: p.title, title_en: p.title_en, price: p.price, qty: 1, size, color, image: p.image_url });
+      toast('Added to your bag', 'ok');
+      modal.close(m);
+    });
+  }
+
+  function initCartDrawer() {
+    if (document.getElementById('cartDrawer')) return;
+    document.body.insertAdjacentHTML('beforeend', `
+      <div class="cart-drawer-backdrop" data-cart-close></div>
+      <aside class="cart-drawer" id="cartDrawer" role="dialog" aria-modal="true" aria-label="Shopping bag" aria-hidden="true" tabindex="-1">
+        <div class="cart-drawer-head"><div><span class="eyebrow">YOUR BAG</span><h2>Shopping bag <span class="drawer-count" id="drawerCount">0</span></h2></div><button class="modal-close" type="button" data-cart-close aria-label="Close bag">✕</button></div>
+        <div class="cart-drawer-items" id="drawerItems"></div>
+        <div class="cart-drawer-empty" id="drawerEmpty"><p>Your bag is empty.</p><a class="btn btn--ghost btn--sm" href="shop.html">Explore the drop</a></div>
+        <div class="cart-drawer-foot" id="drawerFoot"><div class="drawer-total"><span>Subtotal</span><b id="drawerSubtotal"></b></div><div class="drawer-total drawer-total-final"><span>Total</span><b id="drawerTotal"></b></div><a class="btn btn--block" id="drawerCheckout" href="checkout.html">Checkout</a><a class="drawer-view-bag" href="cart.html">View full bag</a></div>
+      </aside>`);
+    const drawer = $('#cartDrawer');
+    let returnFocus = null;
+    const render = () => {
+      const items = cart.get();
+      $('#drawerCount').textContent = items.reduce((sum, item) => sum + (item.qty || 1), 0);
+      $('#drawerItems').innerHTML = items.map(item => {
+        const key = `${item.id}__${item.size || ''}__${item.color || ''}`;
+        return `<article class="drawer-item" data-key="${util.esc(key)}"><img src="${util.img(item.image || item.image_url, true)}" alt=""><div class="drawer-item-info"><b>${util.esc(item.title)}</b><span>${[item.size && `Size ${util.esc(item.size)}`, item.color && util.esc(item.color)].filter(Boolean).join(' · ')}</span><strong>${util.money(item.price)}</strong></div><button type="button" class="drawer-remove" data-drawer-remove aria-label="Remove ${util.esc(item.title)}">×</button></article>`;
+      }).join('');
+      $('#drawerEmpty').classList.toggle('hide', items.length > 0);
+      $('#drawerFoot').classList.toggle('hide', !items.length);
+      $('#drawerSubtotal').textContent = util.money(cart.subtotal());
+      $('#drawerTotal').textContent = util.money(cart.total());
+    };
+    const close = () => {
+      if (!drawer.classList.contains('is-open')) return;
+      drawer.classList.remove('is-open');
+      $('.cart-drawer-backdrop').classList.remove('is-open');
+      drawer.setAttribute('aria-hidden', 'true');
+      $('#cartDrawerOpen')?.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('is-locked');
+      returnFocus?.focus();
+      returnFocus = null;
+    };
+    ON($('#cartDrawerOpen'), 'click', () => {
+      returnFocus = document.activeElement;
+      render(); drawer.classList.add('is-open'); $('.cart-drawer-backdrop').classList.add('is-open');
+      drawer.setAttribute('aria-hidden', 'false');
+      $('#cartDrawerOpen')?.setAttribute('aria-expanded', 'true');
+      document.body.classList.add('is-locked'); drawer.focus();
+    });
+    $$('[data-cart-close]').forEach(el => ON(el, 'click', close));
+    ON(document, 'keydown', e => { if (e.key === 'Escape' && drawer.classList.contains('is-open')) close(); });
+    ON(document, 'jl:cart', render);
+    ON($('#drawerItems'), 'click', e => {
+      const row = e.target.closest('.drawer-item');
+      if (!row) return;
+      if (e.target.closest('[data-drawer-remove]')) cart.remove(row.dataset.key);
+    });
+    ON($('#drawerCheckout'), 'click', e => { if (!cart.get().length) { e.preventDefault(); toast('Your bag is empty.', 'warn'); } });
+    render();
+  }
+
+  ON(document, 'click', async e => {
+    const trigger = e.target.closest('[data-quick], [data-quick-view]');
+    if (!trigger) return;
+    e.preventDefault();
+    const id = trigger.dataset.quick || trigger.dataset.quickView;
+    const p = (await products.all()).find(item => String(item.id) === String(id));
+    if (p) openQuickView(p);
+  });
+
+  /* Keep one lightweight timer for all currently visible offer countdowns. */
+  let countdownTimer = null;
   function initCountdowns() {
-    const els = $$('[data-offer-end]');
-    if (!els.length) return;
+    if (!$$('[data-offer-end]').length || countdownTimer) return;
     const tick = () => {
-      els.forEach(el => {
+      $$('[data-offer-end]').forEach(el => {
         const end = new Date(el.dataset.offerEnd);
         if (isNaN(end)) return;
         const left = end.getTime() - Date.now();
-        if (left <= 0) { el.textContent = 'Ended'; el.closest('.offer-strip')?.remove(); return; }
+        if (left <= 0) {
+          el.textContent = 'Ended';
+          el.closest('.offer-strip, .card-old-badge')?.remove();
+          return;
+        }
         el.textContent = offer.countdown(end);
       });
     };
     tick();
-    setInterval(tick, 1000);
+    countdownTimer = setInterval(tick, 1000);
   }
 
   /* ==========================================================
