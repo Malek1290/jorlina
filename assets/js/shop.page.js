@@ -1,7 +1,26 @@
 /* ============================================================
-   CLOTHINA — SHOP PAGE (المتجر)
+   CLOTHINA — STREETWEAR SHOP
    ============================================================ */
 const { $, $$, ON, util, products, cardHTML } = window.JL;
+const STREET_FILTERS = [
+  { label: 'All', key: 'all' },
+  { label: 'Oversized', key: 'oversized' },
+  { label: 'Hoodies', key: 'hoodies' },
+  { label: 'Graphic Tees', key: 'graphic-tees' },
+  { label: 'Denim', key: 'denim' }
+];
+
+function matchesFilter(product, key) {
+  if (key === 'all') return true;
+  const text = [product.category, product.title, product.title_en, product.description, product.fabric]
+    .filter(Boolean).join(' ').toLowerCase();
+  if (key.startsWith('category:')) return String(product.category || '').toLowerCase() === key.slice(9).toLowerCase();
+  if (key === 'oversized') return /oversiz|relaxed fit|loose fit/.test(text);
+  if (key === 'hoodies') return /hoodie|sweatshirt|hooded/.test(text);
+  if (key === 'graphic-tees') return /graphic tee|graphic t-shirt|t-shirt|tee shirt|tee/.test(text);
+  if (key === 'denim') return /denim|jeans/.test(text);
+  return true;
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   const grid = $('#shopGrid');
@@ -10,44 +29,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   const countEl = $('#resCount');
   const params = new URLSearchParams(location.search);
   let list = await products.all();
-  let cat = params.get('cat') || '';
+  const requested = params.get('cat') || '';
+  const extraCategories = [...new Set(list.map(p => p.category).filter(Boolean))]
+    .filter(category => !STREET_FILTERS.some(f => f.label.toLowerCase() === category.toLowerCase()));
+  const filters = [...STREET_FILTERS, ...extraCategories.map(category => ({ label: category, key: `category:${category}` }))];
+  let active = requested
+    ? (filters.find(f => f.key.toLowerCase() === requested.toLowerCase() || f.label.toLowerCase() === requested.toLowerCase())?.key || `category:${requested}`)
+    : 'all';
 
-  /* الأقسام */
-  const cats = ['', ...new Set(list.map(p => p.category).filter(Boolean))];
-  chipsBox.innerHTML = cats.map(c => `
-    <button class="chip ${c === cat ? 'is-on' : ''}" data-cat="${util.esc(c)}">${c ? util.esc(c) : 'Shop all'}</button>`).join('');
-  $$('.chip', chipsBox).forEach(b => ON(b, 'click', () => {
-    cat = b.dataset.cat;
-    $$('.chip', chipsBox).forEach(x => x.classList.toggle('is-on', x === b));
-    history.replaceState({}, '', cat ? `?cat=${encodeURIComponent(cat)}` : location.pathname);
+  chipsBox.innerHTML = filters.map(f => `
+    <button class="chip ${f.key === active ? 'is-on' : ''}" type="button" data-filter="${util.esc(f.key)}" aria-pressed="${f.key === active}">${util.esc(f.label)}</button>`).join('');
+  $$('.chip', chipsBox).forEach(button => ON(button, 'click', () => {
+    active = button.dataset.filter;
+    $$('.chip', chipsBox).forEach(chip => {
+      const selected = chip === button;
+      chip.classList.toggle('is-on', selected);
+      chip.setAttribute('aria-pressed', String(selected));
+    });
+    const selected = filters.find(f => f.key === active);
+    if (active === 'all') history.replaceState({}, '', location.pathname);
+    else history.replaceState({}, '', `?cat=${encodeURIComponent(selected?.label || active.slice(9))}`);
     render();
   }));
 
   function render() {
-    let rows = cat ? list.filter(p => p.category === cat) : list.slice();
+    let rows = list.filter(product => matchesFilter(product, active));
     const sort = sortSel.value;
     if (sort === 'price-asc') rows.sort((a, b) => a.price - b.price);
     if (sort === 'price-desc') rows.sort((a, b) => b.price - a.price);
     if (sort === 'new') rows.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
 
     if (!rows.length) {
-      grid.innerHTML = `
-        <div class="empty" style="grid-column:1/-1">
-          <b>No items in this collection yet</b>
-          <span class="tiny">Try another collection or browse everything.</span>
-          <a class="btn btn--ghost btn--sm" href="shop.html">Shop all</a>
-        </div>`;
+      grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><b>No pieces in this edit yet</b><span class="tiny">Try another filter or browse everything.</span><button class="btn btn--ghost btn--sm" type="button" data-reset-filter>Shop all</button></div>`;
+      ON(grid.querySelector('[data-reset-filter]'), 'click', () => chipsBox.querySelector('[data-filter="all"]')?.click());
     } else {
-      grid.innerHTML = rows.map((p, i) => cardHTML(p, i)).join('');
+      grid.innerHTML = rows.map((product, index) => cardHTML(product, index)).join('');
       window.JL.initCountdowns();
       if (window.gsap && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        gsap.fromTo('#shopGrid .card', { y: 20, opacity: 0 },
-          { y: 0, opacity: 1, duration: .8, ease: 'power3.out', stagger: .05 });
+        gsap.fromTo('#shopGrid .card', { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: .55, ease: 'power3.out', stagger: .045 });
       } else {
-        $$('#shopGrid .card').forEach(c => { c.style.opacity = 1; c.style.transform = 'none'; });
+        $$('#shopGrid .card').forEach(card => { card.style.opacity = 1; card.style.transform = 'none'; });
       }
     }
-    countEl.textContent = rows.length + ' items';
+    countEl.textContent = `${rows.length} ${rows.length === 1 ? 'piece' : 'pieces'}`;
   }
 
   ON(sortSel, 'change', render);
