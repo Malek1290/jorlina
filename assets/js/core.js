@@ -618,6 +618,50 @@
     </svg>`
   };
 
+  const COOKIE_CONSENT_KEY = 'clothina_cookie_consent';
+  function initCookieConsent() {
+    if (document.getElementById('cookieConsent')) return;
+    const savedChoice = () => {
+      try {
+        const entry = document.cookie.split(';').map(part => part.trim()).find(part => part.startsWith(`${COOKIE_CONSENT_KEY}=`));
+        if (entry) return decodeURIComponent(entry.slice(COOKIE_CONSENT_KEY.length + 1));
+      } catch (_) {}
+      try { return localStorage.getItem(COOKIE_CONSENT_KEY) || ''; } catch (_) { return ''; }
+    };
+    const hasChoice = ['all', 'essential'].includes(savedChoice());
+    const banner = document.createElement('section');
+    banner.id = 'cookieConsent';
+    banner.className = 'cookie-consent';
+    banner.setAttribute('role', 'region');
+    banner.setAttribute('aria-label', 'Cookie preferences');
+    banner.hidden = hasChoice;
+    banner.innerHTML = `
+      <div class="cookie-consent-copy">
+        <strong>Cookie preferences</strong>
+        <p>Essential browser storage keeps your shopping bag and checkout working. We do not currently use analytics or advertising cookies. Third-party security cookies are controlled by their service and your browser.</p>
+      </div>
+      <div class="cookie-consent-actions">
+        <button type="button" class="cookie-accept" data-cookie-choice="all">Accept all</button>
+        <button type="button" class="cookie-essential" data-cookie-choice="essential">Essential only</button>
+      </div>`;
+    document.body.appendChild(banner);
+
+    const saveChoice = choice => {
+      const expiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+      const secure = location.protocol === 'https:' ? '; Secure' : '';
+      try { document.cookie = `${COOKIE_CONSENT_KEY}=${encodeURIComponent(choice)}; Expires=${expiry}; Path=/; SameSite=Lax${secure}`; } catch (_) {}
+      try { localStorage.setItem(COOKIE_CONSENT_KEY, choice); } catch (_) {}
+      banner.hidden = true;
+    };
+    banner.querySelectorAll('[data-cookie-choice]').forEach(button => {
+      ON(button, 'click', () => saveChoice(button.dataset.cookieChoice));
+    });
+    $$('[data-cookie-settings]').forEach(button => ON(button, 'click', () => {
+      banner.hidden = false;
+      banner.querySelector('[data-cookie-choice="all"]')?.focus();
+    }));
+  }
+
   function chrome() {
     const page = document.body.dataset.page || 'home';
     const header = `
@@ -680,6 +724,7 @@
                 <li><a href="cart.html">Shopping bag</a></li>
                 <li><a href="#" data-open-guide>Size guide</a></li>
                 <li><a href="#" data-open-shipping>Delivery & returns</a></li>
+                <li><button class="cookie-settings" type="button" data-cookie-settings>Cookie settings</button></li>
               </ul>
             </div>
             <div>
@@ -702,6 +747,7 @@
     if (hHost) hHost.innerHTML = header;
     const fHost = document.getElementById('site-footer');
     if (fHost) fHost.innerHTML = footer;
+    initCookieConsent();
     initCartDrawer();
 
     // burger
