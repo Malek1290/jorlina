@@ -1239,11 +1239,14 @@ body{font-family:var(--font-ar);line-height:1.65}
 .badge--best{background:var(--color-text-on-light)!important;color:#fff!important}
 .badge--sale{background:var(--color-sale)!important;color:#fff!important}
 .card-timed-badge{position:absolute;bottom:12px;inset-inline-start:12px;z-index:3}
-.card-actions{position:relative;z-index:4;display:flex;gap:7px;padding:0 12px 12px;margin-top:-58px;transform:translateY(8px);opacity:0;pointer-events:none;transition:transform .32s var(--ease-out),opacity .25s}
+.card-actions{position:relative;z-index:4;display:flex;gap:7px;padding:0 12px 12px;margin:0;transform:none;opacity:1;pointer-events:auto;transition:transform .32s var(--ease-out),opacity .25s}
 .card-quick,.card-view{position:static;transform:none;opacity:1;backdrop-filter:none;height:46px;border-radius:7px;font-weight:800;box-shadow:0 4px 18px rgba(44,30,18,.2)}
 .card-quick{flex:1;background:var(--color-primary-accent);color:var(--color-text-on-light);border:0}
 .card-view{min-width:68px;padding:0 14px;background:var(--color-card-bg);color:var(--color-text-on-light);border:1px solid var(--color-card-bg)}
-.card:hover .card-actions,.card:focus-within .card-actions{transform:none;opacity:1;pointer-events:auto}
+@media(hover:hover) and (min-width:761px){
+  .card-actions{margin-top:-58px;transform:translateY(8px);opacity:0;pointer-events:none}
+  .card:hover .card-actions,.card:focus-within .card-actions{transform:none;opacity:1;pointer-events:auto}
+}
 .card-body{padding:14px 14px 16px;gap:7px}
 .card-title{font-weight:800;line-height:1.25}
 .card-title-en{font-size:10px!important;letter-spacing:.1em!important;font-weight:700}
