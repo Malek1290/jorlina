@@ -1,13 +1,22 @@
-# Netlify / Cloudflare Pages cache policy
-/assets/img/*
+# Static-host cache policy
+/assets/portfolio/img/*
   Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
-/assets/fonts/*
+/assets/portfolio/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+/assets/portfolio/*.css
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/assets/portfolio/*.js
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/clothina/assets/img/*
   Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
-/assets/css/*
-  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
-/assets/js/*
-  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+/clothina/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
 /
   Cache-Control: public, max-age=0, must-revalidate
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
