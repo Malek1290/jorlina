@@ -8,7 +8,8 @@
 <meta name="description" content="CLOTHINA is a Cairo streetwear label for easy layers, relaxed fits, and everyday style, with delivery across Egypt.">
 <link rel="icon" href="assets/img/brand/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/img/brand/favicon.png">
-<link rel="preload" as="image" href="assets/img/hero-fashionista.webp" type="image/webp" fetchpriority="high">
+<link rel="preload" as="image" href="assets/img/hero-fashionista.webp" type="image/webp" media="(min-width: 641px)" fetchpriority="high">
+<link rel="preload" as="image" href="assets/img/hero-mobile-poster.webp" type="image/webp" media="(max-width: 640px)" fetchpriority="high">
 <link rel="preconnect" href="https://ymsrfxmwwpwjgzzaytsh.supabase.co" crossorigin>
 <link rel="stylesheet" href="assets/css/main.css">
 </head>
@@ -17,7 +18,10 @@
 <!-- ============ LOADER (logo + loading progress) ============ -->
 <div id="jl-loader">
   <div class="jl-loader-inner">
-    <img class="jl-loader-logo" src="assets/img/brand/clothina-wordmark-white.png" alt="CLOTHINA" width="590" height="70">
+    <span class="jl-loader-aura" aria-hidden="true"></span>
+    <div class="jl-loader-logo-wrap">
+      <img class="jl-loader-logo" src="assets/img/brand/clothina-wordmark-white.png" alt="CLOTHINA" width="590" height="70">
+    </div>
     <div class="jl-loader-bar"><i></i></div>
     <div class="jl-loader-pct">00%</div>
   </div>
@@ -30,6 +34,8 @@
   <section class="hero">
     <div class="hero-background" aria-hidden="true">
       <picture>
+        <source media="(max-width: 640px)" srcset="assets/img/hero-mobile-poster.webp" type="image/webp">
+        <source media="(max-width: 640px)" srcset="assets/img/hero-mobile-poster.jpg">
         <source srcset="assets/img/hero-fashionista.webp" type="image/webp">
         <img src="assets/img/hero-fashionista.jpg" alt="" width="736" height="412" fetchpriority="high" decoding="async">
       </picture>
