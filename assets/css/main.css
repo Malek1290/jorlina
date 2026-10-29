@@ -1309,3 +1309,79 @@ body{font-family:var(--font-ar);line-height:1.65}
   .drawer-item>img{width:66px;height:82px}
   .wa-fab{bottom:16px;inset-inline-end:16px}
 }
+
+/* HEADER CONTRAST — dark translucent glass, crisp links and generous touch targets */
+:root{--header-h:82px}
+.site-header{
+  background:rgba(44,30,18,.86);
+  border-bottom:1px solid rgba(248,245,240,.32);
+  backdrop-filter:blur(10px) saturate(145%);
+  -webkit-backdrop-filter:blur(10px) saturate(145%);
+  box-shadow:0 8px 28px rgba(44,30,18,.12);
+}
+.site-header.is-stuck{
+  background:rgba(44,30,18,.92);
+  border-bottom-color:rgba(248,245,240,.38);
+  box-shadow:0 10px 28px rgba(44,30,18,.24);
+}
+.header-inner{gap:clamp(18px,2.5vw,38px)}
+.nav{gap:clamp(18px,2.4vw,34px)}
+.nav a{
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  padding:8px 2px;
+  color:#FFFFFF;
+  font-weight:700;
+  transition:color .22s ease;
+}
+.nav a:hover,.nav a:focus-visible{color:var(--color-primary-accent)}
+.nav a.is-active{color:#FFFFFF}
+.nav a::after{height:2px;background:var(--color-primary-accent)}
+.header-actions{gap:10px}
+.site-header .icon-btn{
+  width:48px;
+  height:48px;
+  min-width:48px;
+  min-height:48px;
+  color:#FFFFFF;
+  border:1px solid rgba(248,245,240,.2);
+  background:rgba(248,245,240,.06);
+}
+.site-header .icon-btn:hover,.site-header .icon-btn:focus-visible{
+  color:#FFFFFF;
+  border-color:var(--color-primary-accent);
+  background:rgba(212,175,55,.2);
+}
+.site-header .icon-btn svg{width:21px;height:21px}
+.site-header .cart-count{
+  top:1px;
+  inset-inline-start:auto;
+  inset-inline-end:1px;
+  min-width:20px;
+  height:20px;
+  background:var(--color-primary-accent);
+  color:var(--color-text-on-light);
+  border:2px solid #2C1E12;
+  font-weight:800;
+}
+.site-header .brand-logo{height:46px}
+.site-header .brand:hover .brand-logo{opacity:1;transform:none}
+.site-header :focus-visible{outline:2px solid var(--color-primary-accent);outline-offset:3px}
+@media(max-width:960px){
+  :root{--header-h:78px}
+  .header-inner{gap:14px}
+  .site-header .brand-logo{height:40px}
+}
+@media(max-width:560px){
+  :root{--header-h:72px}
+  .header-actions{gap:8px}
+  .site-header .brand-logo{height:27px}
+  .site-header .icon-btn{width:48px;height:48px;min-width:48px;min-height:48px}
+}
+@media(max-width:400px){
+  .header-inner{gap:7px}
+  .header-actions{gap:5px}
+  .site-header .brand-logo{height:clamp(21px,6.5vw,26px)}
+  .site-header .icon-btn{width:44px;height:44px;min-width:44px;min-height:44px}
+}
