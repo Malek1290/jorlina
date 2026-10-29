@@ -1,181 +1,58 @@
-# CLOTHINA — متجر أزياء (Frontend كامل + Supabase)
+# Malek — Portfolio
 
-متجر جاهز للاستخدام بواجهة عربية RTL فخمة (Quiet Luxury)، بدون Backend منفصل:
-**HTML + CSS + JavaScript (ES6+) + GSAP + Three.js + Supabase (Database & Storage)**،
-وكل الطلبات بتوصل على واتساب **01040124131**، مع دفع مقدم عبر فودافون كاش.
+An editorial, monochrome portfolio for **Malek**, inspired by the supplied GAZU fashion-store reference.
 
----
+## Selected work
 
-## 1) الملفات
+| Project | Live site |
+| --- | --- |
+| **CLOTHINA** — featured streetwear e-commerce project | https://malek1290.github.io/CLOTHINA/index.html |
+| **Jorlina** — quiet-luxury fashion storefront | https://jorlina-quiet-luxury.vercel.app/ |
 
-```
-jorlina/
-├─ index.html            ← الصفحة الرئيسية + Hero photo + شاشة تحميل متحركة باللوجو
-├─ shop.html             ← المتجر (فلاتر أقسام + ترتيب)
-├─ product.html          ← صفحة المنتج (جاليري موحّد + ثامبنيل + مقاس/لون + دليل قياسات)
-├─ cart.html             ← السلة
-├─ checkout.html         ← البيانات + المقاسات + طرق الدفع + زر BUY
-├─ supabase-setup.sql    ← شغّله مرة واحدة في Supabase (جداول + buckets + حماية RLS)
-│
-├─ assets/
-│  ├─ css/main.css       ← ألوان CLOTHINA البنية والبيضاء
-│  ├─ css/fonts.css      ← ملفات تعريف خطوط احتياطية (غير محمّلة في الواجهة السريعة)
-│  ├─ fonts/             ← ملفات woff2 محفوظة للاستخدام الاختياري
-│  ├─ img/               ← صور WebP محسّنة + ملفات JPEG احتياطية
-│  ├─ vendor/            ← مكتبات حركة قديمة محفوظة، وغير مطلوبة لتشغيل المتجر
-│  └─ js/
-│     ├─ config.js       ← 🔴 كل الإعدادات: المفاتيح · رقم واتساب · الرمز السري
-│     ├─ env.js          ← تجاوزات محلية (يشبه .env) اختياري
-│     ├─ silk.js         ← مؤثر Three.js قديم غير محمّل
-│     ├─ core.js         ← Supabase · الآدمن المحمّل عند الحاجة · السلة · الهيدر/الفوتر
-│     ├─ admin.js        ← لوحة التحكم المخفية (تُحمّل فقط في وضع الآدمن)
-│     └─ *.page.js       ← كود كل صفحة
-```
+## What’s included
 
-## 2) خطوات التشغيل (٥ دقايق)
+- Responsive portfolio homepage with oversized typography and a warm neutral palette.
+- Featured CLOTHINA section, two project cards, and direct live-site links.
+- Searchable project index and detailed case-study dialogs.
+- About, approach, and contact sections.
+- Keyboard-accessible native dialogs, reduced-motion support, and local fonts.
+- The original CLOTHINA storefront preserved under [`clothina/`](clothina/index.html).
 
-1. **Supabase** → افتح مشروعك → **SQL Editor** → الصق ملف `supabase-setup.sql` كامل → **Run**.
-   ده بيعمل:
-   - جدول `items` (المنتجات) + جدول `orders` (الطلبات)
-   - Buckets: `products` · `size-guides` · `measurements` (Public Read)
-   - سياسات RLS: **القراءة عامة** · **الكتابة للآدمن فقط**
-2. (موصى به) **Authentication → Sign In / Providers → Email → Disable sign-ups** عشان محدش يقدر يعمل مستخدمين وهميين.
-3. ارفع ملفات المشروع على أي هوست ثابت (Netlify / Vercel / GitHub Pages / cPanel). ملفات `_headers` و`.htaccess` تضبط كاش الصور والملفات الثابتة على Netlify/Cloudflare Pages وApache/cPanel؛ اضبط Cache-Control بنفس السياسة إذا كان الهوست مختلفًا.
-   مهم: Supabase Public URL بيشتغل من أي دومين (CORS مفتوح ✅ — تم اختباره).
-4. افتح: `https://your-site.com/index.html?admin=malik_secure_2026`
-   - أول مرة بس: الرمز بيتحقق، الحالة بتتحفظ في `localStorage`، **والرمز بيتمسح من شريط العنوان** تلقائياً.
-   - بعد كده افتح الموقع عادي وهتتعرف عليك كآدمن، ويظهر زر «لوحة التحكم» أسفل يسار الشاشة.
+## Run locally
 
-> ملاحظة: الموقع بيشتغل حتى قبل تشغيل الـ SQL، بس بيعرض **منتجات ديمو** من `assets/img`
-> بدل قاعدة البيانات (عشان تشوف التصميم فوراً). بعد الـ SQL، اللي في القاعدة هو اللي يظهر.
-
-## 3) إزاي ترفع منتج
-
-زر **لوحة التحكم** → تاب **منتج جديد**:
-1. ارفعي الصور (أول صورة = الرئيسية، حتى 6 صور).
-2. الاسم (عربي/إنجليزي) · السعر · السعر قبل الخصم · القسم · الخامة · الوصف.
-3. اختاري المقاسات والألوان (وفيه إضافة مقاس/لون مخصص).
-4. (اختياري) صورة **دليل القياسات** الخاصة بالمنتج.
-5. **نشر المنتج** → الصورة ترفع على Storage → الرابط + البيانات تتحفظ في `items` → تظهر للجميع فوراً.
-
-تاب **المنتجات** = حذف/مراجعة. تاب **الطلبات** = آخر الأوردرات المحفوظة. تاب **الإعدادات** = الرابط السري + إلغاء وضع الآدمن.
-
-## 4) مسار العميل
-
-المنتج → اختيار **المقاس** و**اللون** و**الكمية** → **أضيفي للسلة** → **السلة** → **إتمام الطلب** →
-البيانات → **مقاساتك (اختياري: طول/صدر/وسط/أرداف/كتف/كم + ملاحظات + صور)** → **طريقة الدفع** →
-زر **BUY** → تُبنى رسالة واتساب كاملة وتُفتح على الرقم **201040124131** (01040124131)، وفي نفس الوقت الطلب يُسجَّل في `orders`.
-
-### طريقة الدفع (فودافون كاش فقط)
-يحوّل العميل **٥٠٪ من إجمالي الطلب** مقدماً إلى فودافون كاش على الرقم **01040124131** لتأكيد الأوردر، ويدفع النصف المتبقي عند الاستلام. المبلغ المطلوب والمبلغ المتبقي يظهران تلقائياً في صفحة الدفع ورسالة واتساب.
-
-### شكل رسالة واتساب
-```
-✦ طلب جديد — CLOTHINA ✦
-رقم الطلب: ORD-XXXXXX-XXX
-— بيانات العميل —   الاسم · الجوال · المدينة · العنوان
-— المنتجات —        الاسم / المقاس / اللون / الكمية / السعر
-— المقاسات (اختياري) — الطول · الصدر · الوسط · الأرداف · الكتف · الكم · ملاحظات + روابط الصور
-المجموع · الخصم (لو فيه كوبون) · الإجمالي
-— طريقة الدفع —      فودافون كاش
-                      دفعة مقدمة ٥٠٪ + رقم التحويل
-                      المتبقي عند الاستلام: …
-```
-
-> المتجر موجّه لمصر، والعملة **ج.م**، والفرع **القاهرة — مصر**.
-
-## 5) الحماية (مهم تفهمها صح)
-
-الحماية ٣ طبقات:
-1. **الرابط السري + localStorage** → إخفاء واجهة الآدمن عن الزوار فقط.
-2. **دالة `is_admin()`** في قاعدة البيانات بتتحقق من هيدر `x-jl-admin` قبل أي كتابة.
-3. **RLS** على `items` و`orders` و`storage.objects`: `INSERT/UPDATE/DELETE` مرفوضة لأي حد مش آدمن.
-
-⚠️ بصراحة كاملة: لأن المشروع Frontend فقط، **الرمز موجود في الكود**، وأي حد فاهم تقنياً ويقرأ
-`config.js` يقدر يلاقيه. الطبقة اللي بتحمي فعلاً هي RLS + دالة `is_admin` (يعني حتى لو حد غيّر
-الرمز في متصفحه، Supabase هترفض الكتابة). لو عايز أمان أعلى لاحقاً، الحل هو Supabase Auth
-(إيميل/باسورد للآدمن) + JWT، وأقدر أضيفها لك في أي وقت.
-
-**مهم:** الـ Public/Publishable key آمن إنه يظهر (ده تصميمه). اللي **ممنوع** يظهر أبداً هو
-`service_role` key — متحطهوش في المشروع.
-
-## 6) تخصيص سريع (من `assets/js/config.js`)
-
-| الإعداد | المتغير |
-|---|---|
-| رقم واتساب الطلبات | `WHATSAPP_NUMBER` (صيغة دولية: 201040124131) |
-| نسبة الدفعة المقدمة | `DEPOSIT_PERCENT` (الافتراضي 50%) |
-| رقم فودافون كاش | `VODAFONE_CASH_NUMBER` |
-| تيك توك | `TIKTOK` · `TIKTOK_HANDLE` (لا يوجد حساب إنستقرام) |
-| المدينة في الفوتر | `CITY` |
-| العملة | `CURRENCY` (الافتراضي "ج.م") |
-| مصاريف الشحن | `SHIPPING` (0 = شحن مجاني) |
-| الرمز السري | `ADMIN_TOKEN` (غيّره، وبعده غيّره كمان في `supabase-setup.sql` → `is_admin`) |
-| المقاسات الافتراضية | `DEFAULT_SIZES` |
-| الألوان الافتراضية | `DEFAULT_COLORS` |
-| الأقسام | `CATEGORIES` |
-| طرق الدفع | `PAYMENT_METHODS` |
-
-## 6.b) تعديل المنتجات + العروض المحدودة + الكوبونات
-
-> ⚠️ **مهم:** لو كنت شغّلت `supabase-setup.sql` قبل كده، شغّل ملف **`supabase-update-2.sql`**
-> مرة واحدة في SQL Editor. الملف ده بيضيف: أعمدة العرض المحدود، جدول `coupons`، دالة
-> `validate_coupon`، تشديد سياسات RLS، وإنشاء الـ Storage buckets. آمن للتشغيل أكتر من مرة.
-
-### تعديل منتج موجود
-لوحة التحكم → **المنتجات** → زر **تعديل** على أي منتج:
-بتتحمّل كل بياناته (الصور، السعر، المقاسات، الألوان، دليل القياسات، العرض) وتقدر تغيّر أي حاجة
-وتضيف صور جديدة (الصور القديمة بتفضل موجودة) وبعدها **حفظ التعديلات**.
-
-### عرض لفترة محدودة (كان بكذا والآن كذا)
-في نموذج المنتج: **عرض لفترة محدودة** → فعّليه → اكتبي «السعر قبل الخصم» (كان بـ) + «ينتهي العرض في».
-العميل بيشوف:
-- على الكارت: `-25%` + شارة **عرض محدود** + عدّاد تنازلي حيّ.
-- في صفحة المنتج: شريط **«عرض محدود — كان بـ 5,250 ج.م والآن 4,200 ج.م»** + العدّاد.
-- بعد انتهاء الوقت: العدّاد والشارة بيختفوا تلقائياً والسعر الحالي يفضل زي ما هو.
-
-### الكوبونات (Coupon / Discount)
-1. **للآدمن:** لوحة التحكم → تاب **الكوبونات** → الكود + النسبة % + (اختياري) تاريخ انتهاء +
-   **اختيار المنتجات** اللي ينطبق عليها (مفيش اختيار = كل المنتجات). بعدها حفظ.
-   تقدر تعدّل / توقف / تحذف أي كوبون.
-2. **للعميل:** خانة **COUPON / DISCOUNT** في صفحة السلة وصفحة الدفع. لما يكتب كود صحيح:
-   الخصم بيتحسب على المنتجات المؤهلة بس، ويظهر سطر **خصم الكوبون** قبل الإجمالي،
-   والكود + قيمة الخصم بيدخلوا في رسالة واتساب وفي جدول `orders` (`coupon_code`, `discount`).
-3. **الأمان:** قائمة الأكواد مش متاحة للقراءة العامة — العميل بيتحقق من كود واحد عبر دالة
-   `validate_coupon` (SECURITY DEFINER) اللي بترجع النسبة والمنتجات المرتبطة بس.
-4. **وضع تجريبي:** لو SQL لسه مش متشغّل، الخانة بتقبل الأكواد `CLOTHINA10` / `WELCOME15` / `SALE20`
-   عشان تجرّب الشكل، وبعد تشغيل الملف بيشتغل نظامك الحقيقي تلقائياً.
-
-## 7) اللوجو (Brand files)
-
-اللوجو الذي أرسلته تم قصّه بخلفية شفافة وحُفظ في `assets/img/brand/`. وتم توحيد ملفات العلامة القديمة مع شعار CLOTHINA، مع تدرّج دافئ متناسق للصور المحلية والـ thumbnails:
-
-| الملف | الاستخدام |
-|---|---|
-| `clothina-wordmark-white.png` | الهيدر واللودر والفوتر على الخلفية البنية |
-| `clothina-wordmark-brown.png` | نسخة بنية للاستخدام على الأسطح الفاتحة |
-| `favicon.png` | رمز CLOTHINA للتبويب |
-
-## 7.b) روابط التواصل
-- إنستقرام: لا يوجد حساب إنستقرام
-- تيك توك: https://www.tiktok.com/@clothinaa__0
-- واتساب الطلبات: 01040124131
-- الموقع/الفرع: القاهرة — مصر
-
-## 8) ملاحظة عن الخطوط
-
-- **العربي:** `Zain` (Google Fonts) — ملفات محلية في `assets/fonts` (شغالة أوفلاين).
-- **الإنجليزي / العناوين اللاتينية:** `Cormorant Garamond` كبديل حر لروح *Quiet Luxury*،
-  لأن خط «Quiet Luxury» الأصلي مدفوع/بترخيص شخصي ومش بيسمح باستخدام تجاري.
-  لو عندك ملف الترخيص: حط الملفات في `assets/fonts/` وضيف `@font-face` اسمها
-  `Quiet Luxury` في `fonts.css`، وبدّل `--font-en` في `main.css` — كل حاجة هتتغير تلقائياً.
-
-## 9) تشغيل محلي
+This is a static site. No build step or package install is required.
 
 ```bash
-cd clothina
-python3 -m http.server 8080
-# افتح http://localhost:8080
+python3 -m http.server 8080 --bind 0.0.0.0
 ```
-(الملفات المحلية زي الخطوط ممكن تتحظر لو فتحت `index.html` مباشرة بمسار file:// —
-استخدم سيرفر محلي زي ما فوق.)
+
+Open `http://localhost:8080`.
+
+The preserved storefront is available at `http://localhost:8080/clothina/`.
+
+## Deploy
+
+Deploy the repository root as a static site on GitHub Pages, Vercel, Netlify, or Cloudflare Pages.
+
+- **Build command:** none
+- **Output / publish directory:** repository root (`.`)
+- **Entry point:** `index.html`
+
+## Structure
+
+```text
+index.html                    Portfolio homepage
+assets/portfolio/             Portfolio CSS, JS, fonts, favicon, and project imagery
+clothina/                     Preserved CLOTHINA storefront and original documentation
+_headers                      Static-host cache and security headers
+.htaccess                     Apache cache/compression rules
+```
+
+## Customizing
+
+- Edit copy and project links in `index.html`.
+- Edit case-study content in `assets/portfolio/portfolio.js`.
+- Edit layout, colors, and typography in `assets/portfolio/portfolio.css`.
+- Contact currently links to Malek’s GitHub profile: https://github.com/Malek1290. Add a direct email or booking link when one is available.
+
+Project imagery is stored locally. CLOTHINA previews were captured from the preserved storefront; Jorlina editorial imagery comes from the original project assets.
